@@ -1,0 +1,4 @@
+model_name,accuracy,precision_macro,recall_macro,f1_macro,cv_f1_macro_mean,cv_f1_macro_std,recall_normal,recall_penipuan,recall_promosi,f1_normal,f1_penipuan,f1_promosi
+Multinomial Naive Bayes,0.9605,0.9565,0.9508,0.9527,0.9374,0.0165,1.0,0.8939,0.9583,0.9828,0.9365,0.9388
+Logistic Regression,0.9737,0.9698,0.964,0.9668,0.941,0.0155,1.0,0.9545,0.9375,0.9913,0.9618,0.9474
+Linear SVM,0.9737,0.9698,0.964,0.9668,0.936,0.0116,1.0,0.9545,0.9375,0.9913,0.9618,0.9474
