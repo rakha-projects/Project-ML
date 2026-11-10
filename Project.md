@@ -7,7 +7,7 @@
 
 - **Mata Kuliah:** Pembelajaran Mesin (Machine Learning) — Semester 5
 - **Institusi:** Sekolah Vokasi — Teknologi Rekayasa Komputer
-- **Fokus Folder Kerja:** `Project/` (Seluruh pengerjaan, aset, kode, model, dan dokumentasi dipusatkan di folder ini)
+- **Fokus Folder Kerja:** `Project-ML/` (Repositori GitHub: `https://github.com/rakha-projects/Project-ML.git`)
 - **Topik / Tema:** Classification (Supervised Learning — Natural Language Processing / Text Classification)
 - **Judul Proyek:** *Perbandingan Algoritma Machine Learning untuk Klasifikasi dan Deteksi SMS Phishing Berbahasa Indonesia Serta Implementasinya pada Web Interaktif*
 - **Framework Web Terpilih (Kunci Memori):** **Streamlit** (`app.py` interaktif berbasis Python)
@@ -37,10 +37,10 @@
 
 ---
 
-## 3. Struktur Direktori Proyek (`Project/`)
+## 3. Struktur Direktori Proyek (`Project-ML/`)
 
 ```text
-Project/
+Project-ML/
 │
 ├── Indonesia/                                  # Folder dataset lokal berbahasa Indonesia
 │   ├── dataset_sms_spam_v1.csv                 # [Primer Asli] 1.143 SMS mentah (0=Normal, 1=Penipuan, 2=Promosi)
@@ -70,6 +70,7 @@ Project/
 ├── Rencana_Proyek_ML_SMS_Indonesia.md          # Dokumen rencana awal dan rujukan literatur proyek
 ├── SMS_DATASET_FOR_MULTI-CLASS_...pdf          # Referensi paper ilmiah dataset SMS
 │
+├── alur.md                                     # [DOKUMEN ARSITEKTUR] Panduan alur data, tech stack & model
 ├── PRD.md                                      # Product Requirements Document (Spesifikasi Fitur Lengkap)
 ├── Project.md                                  # Dokumentasi Proyek & Riwayat Perubahan (Selalu di-update)
 ├── requirements.txt                            # Daftar pustaka dependensi Python (pandas, sklearn, streamlit, dll)
@@ -94,8 +95,18 @@ Project/
 │   ├── model_comparison_id.csv                 # Tabel perbandingan metrik evaluasi (CSV)
 │   └── model_comparison_id.json                # Tabel perbandingan metrik evaluasi (JSON)
 │
-├── app.py                                      # Aplikasi antarmuka Web Interaktif Streamlit (Desain example.html)
-├── example.html                                # Berkas referensi desain UI/UX (Navy/Slate palette & Typography)
+├── files/                                      # [SISTEM DESAIN SOLID & LIQUID HERO]
+│   ├── app.py                                  # Streamlit full-width launcher
+│   ├── index.html                              # Frontend SmishingGuard (Bebas Emote, Liquid Hero, Solid Color)
+│   ├── style.css                               # Stylesheet solid color, non-neon, liquid morphing & waves
+│   ├── script.js                               # Client-side inference simulator + auto-resize observer
+│   └── requirements.txt                        # Dependensi streamlit
+├── template/                                   # Folder sistem desain template sebelumnya
+│   ├── index.html                              # Standalone Web App Frontend
+│   ├── style.css                               # Master Stylesheet
+│   └── script.js                               # Interactive Frontend Logic
+├── app.py                                      # Aplikasi Web Streamlit (Menjalankan files/ secara full-width)
+├── example.html                                # Berkas referensi desain awal
 └── laporan/                                    # [Rencana] PPT Laporan & Naskah Video Demo
 ```
 
@@ -133,6 +144,49 @@ Sesuai ketentuan perkuliahan, kelompok beranggotakan 3 orang mahasiswa dengan pe
 ## 6. Riwayat Perubahan (Changelog & Activity Tracking)
 
 > **Komitmen Pembaruan:** Dokumen ini akan diperbarui pada setiap iterasi/perintah prompt untuk merekam semua tindakan, perkembangan implementasi, dan keputusan teknis yang telah diambil.
+
+### [2026-11-10 - Sesi 15] - Desain Ulang Tampilan Web: Folder files/ (Solid Color, Tanpa Emote, Tanpa Neon, Liquid Hero)
+- **Implementasi Permintaan Desain Spesifik Pengguna**:
+  1. *Folder Sumber*: Menggunakan dan menyesuaikan seluruh aset dari folder [**`files/`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/files) (`index.html`, `style.css`, `script.js`, `app.py`).
+  2. *Tanpa Emote / Bebas Emoji*: Menghapus 100% karakter emoji dari antarmuka web (judul, tombol, tag lencana, preset kasus, hingga output teks). Menggantikannya dengan penanda teks formal `[Kasus 1]`, `[PERINGATAN]`, `[INFO]`, atau tipografi murni.
+  3. *Warna Solid (Solid Color) & Tanpa Neon*: Menghilangkan warna lime neon (`#b8f23f`) dan bayangan bercahaya (*glow*). Menggunakan palet solid berwibawa: Deep Forest (`#0a3320`), Solid Green (`#0f4f32`), Solid Emerald (`#15803d`), Solid Crimson Red (`#b91c1c`), Solid Warm Amber (`#b45309`), dan Solid Light Slate (`#f8fafc`).
+  4. *Efek Liquid untuk Hero*: Menerapkan animasi liquid multi-layer pada bagian hero:
+     - 3 elemen *liquid morphing blobs* yang bergerak dinamis dengan CSS `@keyframes liquidMorph`.
+     - Pembatas bawah hero berupa gelombang cairan (*liquid wave divider*) SVG organik yang menyambung mulus ke bagian konten berikutnya.
+  5. *Launcher Streamlit Full-Width*: Mengonfigurasi `app.py` agar merender dokumen HTML/CSS/JS secara utuh tanpa margin mengganggu dan didukung `ResizeObserver` untuk penyesuaian tinggi otomatis.
+- **Kompilasi & Pengujian**:
+  - Berkas `files/app.py` dan `app.py` berhasil diuji dan dikompilasi bebas dari kesalahan sintaks.
+
+### [2026-11-09 - Sesi 14] - Menjalankan Layanan Web Streamlit & Pembukaan Akses Peramban
+- **Aktivasi Server Web Streamlit**:
+  - Menjalankan server aplikasi web Streamlit (`app.py`) pada port 8501 agar dapat diakses langsung oleh pengguna melalui peramban web di `http://localhost:8501`.
+  - Membuka akses pratinjau untuk kedua varian tampilan: aplikasi berbasis Streamlit dan antarmuka web mandiri di folder `template/index.html`.
+
+### [2026-11-09 - Sesi 13] - Perombakan Total Tampilan Web Mengadopsi Folder template/ (HTML, CSS, JS)
+- **Transformasi Berkas `template/` Menjadi Frontend SmishingGuard Interaktif**:
+  - Mengubah [**`template/index.html`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/template/index.html) dari template makanan menjadi aplikasi web mandiri **SmishingGuard** lengkap: Navbar geometric, Hero atmosferik hijau botol (`linear-gradient(180deg, #0a2819, #0a2819)`), typography `Anton` dan `Kaushan Script`, interactive live SMS scanner widget, tombol preset instan, meteran keyakinan, indikator heuristik siber, carousel studi kasus smishing nyata, timeline cara kerja (*how it works*), dan kartu benchmark 3 algoritma model (*plans grid*).
+  - Mengembangkan [**`template/style.css`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/template/style.css) dengan palet visual `--cream: #fbf5dc`, `--green: #0f5c3c`, `--deep: #0a4a30`, `--lime: #b8f23f`, `--orange: #f26a21`, dan `--ink: #0b3d2a`, dilengkapi styling untuk form input, textarea dinamis, result card animatif, dan lencana ancaman siber.
+  - Membangun mesin inferensi simulasi di [**`template/script.js`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/template/script.js) untuk mendukung analisis real-time di sisi peramban (*client-side*), kalkulasi probabilitas terkalibrasi, filter tab studi kasus, navigasi carousel, dan live character/language counter.
+- **Pembaruan Aplikasi Streamlit (`Project-ML/app.py`)**:
+  - Menginjeksi langsung seluruh CSS dari `template/style.css` dan Google Fonts (`Anton`, `Kaushan Script`, `Plus Jakarta Sans`) ke dalam Streamlit.
+  - Menyelaraskan seluruh kontainer Streamlit, tombol pill (`.btn`), tab navigasi, progress bar, metric cards, expander token, dan kartu hasil agar memiliki keselarasan visual 100% dengan estetika `template/`.
+  - Memperbaiki variabel path `RESULTS_DIR` pada tab evaluasi model untuk keandalan rendering gambar Confusion Matrix dan Feature Importance.
+  - Berhasil dikompilasi bebas dari kesalahan sintaks melalui pengujian `py_compile`.
+
+### [2026-11-09 - Sesi 12] - Pembentukan Dokumen Arsitektur & Alur Data (alur.md)
+- **Pembuatan Dokumen `alur.md`**:
+  - Menyusun file [**`Project-ML/alur.md`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/alur.md) sebagai panduan akademik resmi yang merangkum arsitektur sistem, alur data end-to-end, rincian layer ingestion hingga presentasi, diagram alur Mermaid, daftar lengkap tech stack, serta justifikasi ilmiah pemilihan algoritma Logistic Regression.
+  - Menghubungkan dokumentasi alur dengan seluruh modul kode sumber (`preprocessing.py`, `train.py`, `evaluate.py`, `app.py`) dan artefak evaluasi di folder `models/` dan `eda_results/`.
+
+### [2026-11-09 - Sesi 11] - Pemahaman Komprehensif Arsitektur Sistem, Alur Data, Stack Teknologi & Pemilihan Model
+- **Penyesuaian Lingkungan & Repositori Git**:
+  - Memperbarui seluruh referensi direktori kerja ke `Project-ML/` yang terhubung dengan repositori remote GitHub `https://github.com/rakha-projects/Project-ML.git`.
+- **Audit & Penjelasan Komprehensif Sistem**:
+  - Menyusun penjelasan arsitektur end-to-end menyeluruh untuk kesiapan ujian dan presentasi:
+    1. *Cara Kerja Sistem*: Sistem hibrida Machine Learning (TF-IDF + Logistic Regression) yang dikombinasikan dengan Heuristic Security Rule Engine serta antarmuka web Streamlit bertema modern (mengadopsi `example.html`).
+    2. *Alur Data (Data Flow Pipeline)*: Raw SMS Text $\rightarrow$ Deteksi Bahasa Otomatis (ID/EN) $\rightarrow$ Preprocessing & Entity Masking (`[url]`, `[nomor]`, `[nominal]`, `[kode]`) $\rightarrow$ Ekstraksi Fitur TF-IDF N-Gram $(1,2)$ $\rightarrow$ Inferensi Model ML & Probabilitas Terkalibrasi $\rightarrow$ Scoring Risiko Heuristik $\rightarrow$ Visualisasi UI Interaktif (Confidence Meter, Token Warning, & Rekomendasi Mitigasi).
+    3. *Stack & Komponen Teknologi*: Python 3.12, Scikit-Learn, Streamlit, Pandas, NumPy, Joblib, Matplotlib/Seaborn, Google Fonts (*Plus Jakarta Sans* & *Poppins*).
+    4. *Model Machine Learning Terpilih*: Membandingkan 3 algoritma (Multinomial Naive Bayes, Logistic Regression, Linear SVM) dengan 5-Fold Stratified Cross-Validation; menetapkan **Logistic Regression** ($C=2.5$, `class_weight='balanced'`) sebagai model utama berkat Akurasi 97.37%, Macro-F1 96.68%, Recall Penipuan 95.45%, serta estimasi probabilitas terkalibrasi (`predict_proba()`).
 
 ### [2026-10-30 - Sesi 10] - Eksekusi Milestone 6: Pembangunan Aplikasi Web Streamlit Mengadopsi Desain example.html
 - **Pengembangan Antarmuka Interaktif (`Project/app.py`)**:
@@ -290,11 +344,11 @@ Sesuai ketentuan perkuliahan, kelompok beranggotakan 3 orang mahasiswa dengan pe
 ---
 
 ## 7. Rencana Aksi Berikutnya (Next Action Items)
-1. **Milestone 6 (Pengembangan Web Streamlit `app.py`)**:
-   - Membangun antarmuka interaktif di `Project/app.py` sesuai spesifikasi di `PRD.md`.
-   - Mengintegrasikan modul `preprocessing.py` dwibahasa, deteksi bahasa otomatis, dan pemanggilan artefak model `Project/models/best_model_id.joblib` serta `best_model_en.joblib`.
-   - Mengimplementasikan 4 modul antarmuka: Single SMS Scanner, Preset Contoh Pesan, Analisis Heuristik & Explainable AI, Batch CSV Upload, serta Dashboard Evaluasi Model.
-2. **Milestone 7 (Laporan PPT & Naskah Video Demo)**:
-   - Menyusun slide presentasi PPT sesuai struktur M15 (Bab A s.d. O).
-   - Menyiapkan naskah dan panduan perekaman video live execution aplikasi durasi <= 7 menit.
+1. **Milestone 6 (Pengembangan Web Streamlit `app.py`)** [SELESAI]:
+   - Antarmuka interaktif telah selesai dibangun di `Project-ML/app.py` mengadopsi desain elegan `example.html`.
+   - Terintegrasi penuh dengan modul `preprocessing.py` dwibahasa, deteksi otomatis bahasa, dan artefak model `models/best_model_id.joblib` serta `models/best_model_en.joblib`.
+   - Mengimplementasikan 4 tab: Single SMS Scanner + Presets, Pemeriksaan Massal CSV, Dashboard Evaluasi Akademik, dan Anatomi Modus Smishing.
+2. **Milestone 7 (Laporan PPT & Naskah Video Demo)** [SIAP DIKERJAKAN]:
+   - Menyusun slide presentasi PPT sesuai struktur M15 (Bab A s.d. O) berbasis insight dari `EDA_Report.md` dan `Evaluation_Report.md`.
+   - Menyiapkan naskah (*script*) dan panduan perekaman video demonstrasi eksekusi web aplikasi dengan durasi $\le 7$ menit.
 
