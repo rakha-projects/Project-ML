@@ -147,6 +147,16 @@ Sesuai ketentuan perkuliahan, kelompok beranggotakan 3 orang mahasiswa dengan pe
 
 > **Komitmen Pembaruan:** Dokumen ini akan diperbarui pada setiap iterasi/perintah prompt untuk merekam semua tindakan, perkembangan implementasi, dan keputusan teknis yang telah diambil.
 
+### [2026-11-11 - Sesi 17] - Persiapan & Panduan Deployment ke Streamlit Community Cloud (rakhaprojects@gmail.com)
+- **Verifikasi Sinkronisasi Repositori GitHub**:
+  - Memeriksa status repositori git pada branch `main` (`origin/main`). Seluruh berkas terbaru (termasuk `app.py`, `files/`, `presentasi.html`, dan `laporan/`) telah terdorong (*pushed*) dengan aman ke remote GitHub `https://github.com/rakha-projects/Project-ML.git` di bawah akun `Raditya Rakha Irianto <rakhaprojects@gmail.com>`.
+- **Audit Dependensi Deployment**:
+  - Memverifikasi berkas `requirements.txt` di *root directory* agar kompatibel dengan lingkungan Linux Streamlit Cloud (memuat `streamlit`, `pandas`, `numpy`, `scikit-learn`, `joblib`, `matplotlib`, `seaborn`).
+- **Penyusunan Deep-Link Deployment Otomatis**:
+  - Menyiapkan URL peluncuran instan (*1-Click Deploy URL*):
+    `https://share.streamlit.io/deploy?repository=rakha-projects/Project-ML&branch=main&mainModule=app.py`
+  - Memberikan panduan otentikasi OAuth GitHub dan langkah konfirmasi peluncuran publik `*.streamlit.app`.
+
 ### [2026-11-11 - Sesi 16] - Pembuatan Slide Presentasi Akademik 16:9 Siap Konversi PPT (presentasi.html)
 - **Pembuatan Berkas Presentasi Interaktif (`presentasi.html`)**:
   - Membangun berkas presentasi mandiri [**`Project-ML/presentasi.html`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/presentasi.html) dan salinannya di [**`Project-ML/laporan/presentasi.html`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/laporan/presentasi.html) berukuran rasio standar **16:9 widescreen**.
