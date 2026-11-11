@@ -32,7 +32,7 @@
 [X] Milestone 4: Training & Hyperparameter Tuning 3 Model (Selesai)
 [X] Milestone 5: Evaluasi Komprehensif (Confusion Matrix, Macro-F1, Error Analysis) (Selesai)
 [X] Milestone 6: Pembuatan Aplikasi Web Interaktif Berbasis Streamlit (Selesai)
-[ ] Milestone 7: Penyusunan Laporan Akhir (Slide PPT) & Panduan Video Demo (<= 7 menit)
+[X] Milestone 7: Penyusunan Slide Presentasi Akademik 16:9 (presentasi.html Siap Konversi PPT) Selesai
 ```
 
 ---
@@ -107,7 +107,9 @@ Project-ML/
 │   └── script.js                               # Interactive Frontend Logic
 ├── app.py                                      # Aplikasi Web Streamlit (Menjalankan files/ secara full-width)
 ├── example.html                                # Berkas referensi desain awal
-└── laporan/                                    # [Rencana] PPT Laporan & Naskah Video Demo
+├── presentasi.html                             # [SLIDE DECK PPT] File Presentasi 16:9 Lengkap (Bab A - O)
+└── laporan/                                    # Folder Berkas Laporan & Presentasi
+    └── presentasi.html                         # Salinan berkas presentasi siap konversi ke PPT
 ```
 
 ---
@@ -144,6 +146,29 @@ Sesuai ketentuan perkuliahan, kelompok beranggotakan 3 orang mahasiswa dengan pe
 ## 6. Riwayat Perubahan (Changelog & Activity Tracking)
 
 > **Komitmen Pembaruan:** Dokumen ini akan diperbarui pada setiap iterasi/perintah prompt untuk merekam semua tindakan, perkembangan implementasi, dan keputusan teknis yang telah diambil.
+
+### [2026-11-11 - Sesi 16] - Pembuatan Slide Presentasi Akademik 16:9 Siap Konversi PPT (presentasi.html)
+- **Pembuatan Berkas Presentasi Interaktif (`presentasi.html`)**:
+  - Membangun berkas presentasi mandiri [**`Project-ML/presentasi.html`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/presentasi.html) dan salinannya di [**`Project-ML/laporan/presentasi.html`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/laporan/presentasi.html) berukuran rasio standar **16:9 widescreen**.
+  - Merangkum seluruh 15 bab wajib sesuai rubrik perkuliahan M15 (`deskripsi.md`) dari **Bab A s.d. Bab O**:
+    1. *Slide 1 (Bab A)*: Identitas Proyek & Anggota Tim (Mahasiswa 1, 2, 3).
+    2. *Slide 2 (Bab B)*: Latar Belakang Masalah & Urgensi Smishing di Indonesia.
+    3. *Slide 3 (Bab C)*: Tujuan Proyek & Target Capaian Kuantitatif.
+    4. *Slide 4 (Bab D)*: Studi Literatur (5 Paper Ilmiah Rujukan).
+    5. *Slide 5 (Bab E)*: Karakteristik Dataset (1.138 SMS Indo & Universal Schema 14 Kolom).
+    6. *Slide 6 (Bab F)*: Exploratory Data Analysis (EDA) & Anomali Panjang Teks.
+    7. *Slide 7 (Bab G)*: Preprocessing, Kamus Slang 100+ Kata Alay & Entity Masking.
+    8. *Slide 8 (Bab H)*: Ekstraksi Fitur TF-IDF (3.006 N-Gram) & Metodologi Pelatihan.
+    9. *Slide 9 (Bab I)*: Tabel Perbandingan 3 Model & Klaim Metrik Lengkap (Akurasi 97.37%, Recall Penipuan 95.45%, Macro-F1 96.68%).
+    10. *Slide 10 (Bab J)*: Justifikasi Ilmiah Pemilihan Logistic Regression (5 Alasan Utama).
+    11. *Slide 11 (Bab J Lanjutan)*: Pembuktian Good Fit (+2.08% Gap) & Bedah 6 Kasus Kesalahan Prediksi.
+    12. *Slide 12 (Bab K)*: Arsitektur Sistem Hybrid AI & Alur Data 7 Tahap.
+    13. *Slide 13 (Bab L)*: Fitur Aplikasi Web Streamlit & Demonstrasi Langsung.
+    14. *Slide 14 (Bab M)*: Kesimpulan Temuan Utama Proyek.
+    15. *Slide 15 (Bab N)*: Keterbatasan Sistem & Roadmap Riset Lanjutan (IndoBERT/Android).
+    16. *Slide 16 (Bab O)*: Rincian Pembagian Tugas Anggota & Sesi Tanya Jawab (Q&A).
+  - Dilengkapi navigasi slide interaktif (tombol Next/Prev, keyboard shortcut panah & spasi, tombol Fullscreen 'F', serta tombol cetak/ekspor PDF untuk dikonversi menjadi PowerPoint).
+  - Mematuhi ketentuan desain: Warna solid elegan, tanpa emotikon, dan tanpa neon.
 
 ### [2026-11-10 - Sesi 15] - Desain Ulang Tampilan Web: Folder files/ (Solid Color, Tanpa Emote, Tanpa Neon, Liquid Hero)
 - **Implementasi Permintaan Desain Spesifik Pengguna**:

@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Presentasi Proyek Akhir Machine Learning: Deteksi SMS Phishing & Spam</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==============================================================================
+   1. RESET & VARIABLES (SOLID COLORS - NO NEON - NO EMOTES)
+   ============================================================================== */
+:root {
+  --bg-slate: #0b1320;
+  --bg-card: #ffffff;
+  --bg-subtle: #f8fafc;
+  --text-dark: #0f172a;
+  --text-muted: #475569;
+  --text-light: #f8fafc;
+  --primary-deep: #09261a;
+  --primary-solid: #0d4a30;
+  --primary-accent: #15803d;
+  --border-color: #cbd5e1;
+  --danger-solid: #b91c1c;
+  --danger-surface: #fef2f2;
+  --warning-solid: #b45309;
+  --warning-surface: #fffbeb;
+  --safe-solid: #15803d;
+  --safe-surface: #f0fdf4;
+  --blue-solid: #1d4ed8;
+  --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-main);
+  background-color: var(--bg-slate);
+  color: var(--text-dark);
+  line-height: 1.45;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ==============================================================================
+   2. PRESENTATION DECK LAYOUT (16:9 RATIO)
+   ============================================================================== */
+.deck-wrapper {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.slide {
+  display: none;
+  width: 100%;
+  max-width: 1360px;
+  aspect-ratio: 16 / 9;
+  background-color: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.45);
+  padding: 3rem 3.5rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: slideFadeIn 0.25s ease-out forwards;
+}
+
+.slide.active {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideFadeIn {
+  from { opacity: 0; transform: scale(0.985); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* DARK VARIANT SLIDES (COVER / CLOSING) */
+.slide.dark-theme {
+  background-color: var(--primary-deep);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.slide.dark-theme .text-dark {
+  color: #ffffff !important;
+}
+
+.slide.dark-theme .text-muted {
+  color: #cbd5e1 !important;
+}
+
+/* ==============================================================================
+   3. HEADER & FOOTER ON EACH SLIDE
+   ============================================================================== */
+.slide-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.8rem;
+  flex-shrink: 0;
+}
+
+.slide.dark-theme .slide-header {
+  border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+.slide-tag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--primary-accent);
+  background-color: #f0fdf4;
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 0.35rem;
+}
+
+.slide.dark-theme .slide-tag {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #a7f3d0;
+}
+
+.slide-title {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.slide.dark-theme .slide-title {
+  color: #ffffff;
+}
+
+.slide-subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.slide-badge-info {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-align: right;
+  line-height: 1.3;
+}
+
+.slide-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.slide-footer {
+  margin-top: 1rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.slide.dark-theme .slide-footer {
+  border-top-color: rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+}
+
+/* ==============================================================================
+   4. CONTENT GRIDS, CARDS & STAT BADGES
+   ============================================================================== */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.2rem;
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+
+.card-box {
+  background-color: var(--bg-subtle);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.card-box.solid-highlight {
+  background-color: #ffffff;
+  border-color: var(--primary-accent);
+  border-width: 2px;
+}
+
+.slide.dark-theme .card-box {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--primary-solid);
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.slide.dark-theme .card-title {
+  color: #a7f3d0;
+}
+
+.card-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* STAT PILLS */
+.stat-box {
+  background-color: #ffffff;
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--primary-accent);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* DATA TABLES */
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.custom-table th {
+  background-color: var(--primary-solid);
+  color: #ffffff;
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  font-weight: 700;
+  border: 1px solid var(--primary-solid);
+}
+
+.custom-table td {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--border-color);
+  background-color: #ffffff;
+}
+
+.custom-table tr:nth-child(even) td {
+  background-color: var(--bg-subtle);
+}
+
+.custom-table tr.highlight-row td {
+  background-color: #f0fdf4;
+  font-weight: 700;
+  border-color: var(--primary-accent);
+}
+
+/* FLOW DIAGRAM (BOXES & CONNECTORS) */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+
+.flow-step {
+  flex: 1;
+  background-color: #ffffff;
+  border: 2px solid var(--primary-solid);
+  border-radius: 10px;
+  padding: 0.9rem 0.6rem;
+  text-align: center;
+}
+
+.flow-step b {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--primary-solid);
+  margin-bottom: 0.2rem;
+}
+
+.flow-step p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+
+.flow-arrow {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary-accent);
+  flex-shrink: 0;
+}
+
+/* CALLOUT BOXES */
+.callout {
+  padding: 0.85rem 1.1rem;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-accent);
+  background-color: #f0fdf4;
+  font-size: 0.84rem;
+  margin-top: 0.75rem;
+  color: #14532d;
+}
+
+.callout.alert {
+  border-left-color: var(--danger-solid);
+  background-color: var(--danger-surface);
+  color: #991b1b;
+}
+
+/* ==============================================================================
+   5. NAVIGATION CONTROLLER BAR (BOTTOM SCREEN)
+   ============================================================================== */
+.nav-controller {
+  position: fixed;
+  bottom: 15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 99px;
+  padding: 0.4rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  z-index: 100;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.nav-btn {
+  background-color: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+  padding: 0.35rem 0.9rem;
+  border-radius: 99px;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-btn:hover {
+  background-color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
+.nav-btn.primary {
+  background-color: var(--primary-accent);
+  border-color: var(--primary-accent);
+}
+
+.slide-counter {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+  min-width: 90px;
+  text-align: center;
+}
+
+/* ==============================================================================
+   6. PRINT / EXPORT STYLING (FOR DIRECT PDF & PPT CONVERSION)
+   ============================================================================== */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    overflow: visible !important;
+  }
+  .deck-wrapper {
+    padding: 0 !important;
+    height: auto !important;
+    display: block !important;
+  }
+  .slide {
+    display: flex !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    aspect-ratio: auto !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 2.5rem 3rem !important;
+    margin: 0 !important;
+  }
+  .nav-controller {
+    display: none !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="deck-wrapper">
+
+  <!-- ========================================================================
+       SLIDE 1: COVER SLIDE (BAB A - IDENTITAS PROJECT)
+       ======================================================================== -->
+  <section class="slide dark-theme active" id="slide-1">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">TUGAS AKHIR PEMBELAJARAN MESIN (SEMESTER 5)</span>
+        <div class="slide-subtitle text-muted">Program Studi Teknologi Rekayasa Komputer - Sekolah Vokasi</div>
+      </div>
+      <div class="slide-badge-info">
+        KODE PROYEK: M15-ML-SMS<br>
+        TAHUN AKADEMIK 2026
+      </div>
+    </div>
+
+    <div class="slide-body" style="justify-content: center; text-align: center;">
+      <span class="slide-tag" style="margin: 0 auto 1.2rem; font-size: 0.85rem; padding: 0.35rem 1rem;">KLASIFIKASI TEKS NLP HYBRID</span>
+      <h1 class="slide-title" style="font-size: 2.7rem; line-height: 1.15; max-width: 980px; margin: 0 auto 1.2rem;">
+        Perbandingan Algoritma Machine Learning untuk Klasifikasi dan Deteksi SMS Phishing Berbahasa Indonesia Serta Implementasinya pada Web Interaktif
+      </h1>
+      <p class="slide-subtitle" style="font-size: 1.05rem; max-width: 800px; margin: 0 auto 2.5rem;">
+        Sistem Deteksi Dini Rekayasa Sosial, Modus Penipuan Undian, APK Kurir, Pinjol Ilegal, dan Spam Menggunakan Algoritma Multinomial Naive Bayes, Logistic Regression, dan Linear SVM.
+      </p>
+
+      <div class="grid-3" style="max-width: 850px; margin: 0 auto;">
+        <div class="card-box" style="text-align: center;">
+          <b class="card-title" style="justify-content: center; font-size: 0.88rem;">Mahasiswa 1</b>
+          <div class="card-desc">Data Engineer &amp; EDA Specialist</div>
+        </div>
+        <div class="card-box" style="text-align: center;">
+          <b class="card-title" style="justify-content: center; font-size: 0.88rem;">Mahasiswa 2</b>
+          <div class="card-desc">Machine Learning &amp; Evaluation</div>
+        </div>
+        <div class="card-box" style="text-align: center;">
+          <b class="card-title" style="justify-content: center; font-size: 0.88rem;">Mahasiswa 3</b>
+          <div class="card-desc">Web Application &amp; Deployment</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Proyek Akhir Machine Learning</span>
+      <span>Repositori: github.com/rakha-projects/Project-ML</span>
+      <span>Halaman 1 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 2: BAB B - LATAR BELAKANG & PERMASALAHAN
+       ======================================================================== -->
+  <section class="slide" id="slide-2">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB B</span>
+        <h2 class="slide-title">Latar Belakang &amp; Signifikansi Masalah</h2>
+      </div>
+      <div class="slide-badge-info">
+        ANALISIS ANCAMAN SIBER<br>
+        REKAYASA SOSIAL INDONESIA
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3" style="margin-bottom: 1.5rem;">
+        <div class="card-box">
+          <div class="card-title">[1] Maraknya Kejahatan Smishing</div>
+          <p class="card-desc">
+            SMS Phishing (Smishing) merupakan vektor utama rekayasa sosial di Indonesia. Berdasarkan data BSSN &amp; Kominfo, kerugian masyarakat akibat penipuan APK dan transfer fiktif mencapai ratusan miliar rupiah per tahun.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[2] Karakteristik Teks Sangat Informal</div>
+          <p class="card-desc">
+            SMS bahasa Indonesia dipenuhi singkatan gaul (*kata alay*), typo disengaja, permutasi nomor telepon, tautan acak (*shortlink*), dan manipulasi psikologis yang mengelabui filter penyedia telekomunikasi.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[3] Ketiadaan Filter Cerdas pada GSM</div>
+          <p class="card-desc">
+            Berbeda dengan email yang memiliki filter spam berlapis (SPF/DKIM), jalur SMS GSM konvensional tidak memiliki mekanisme verifikasi pengirim, sehingga pengguna sangat rentan menjadi korban.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <b>Signifikansi Solusi:</b> Diperlukan sistem cerdas berbasis Natural Language Processing (NLP) yang mampu menormalisasi bahasa gaul, menyamarkan entitas acak (*entity masking*), serta memberikan klasifikasi multi-kelas (Normal, Penipuan, Promosi) dengan jaminan akurasi tinggi dan minim *false alarm*.
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab B - Latar Belakang Masalah</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 2 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 3: BAB C - TUJUAN & TARGET CAPAIAN PROJECT
+       ======================================================================== -->
+  <section class="slide" id="slide-3">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB C</span>
+        <h2 class="slide-title">Tujuan &amp; Target Capaian Proyek</h2>
+      </div>
+      <div class="slide-badge-info">
+        TARGET KUANTITATIF &amp;<br>
+        DELIVERABLE UTAMA
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2" style="margin-bottom: 1.5rem;">
+        <div class="card-box">
+          <div class="card-title">[A] Tujuan Teknis Machine Learning</div>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6;">
+            <li>Membangun pipeline pra-pemrosesan teks komprehensif (kamus slang 100+ kata alay dan *regex entity masking*).</li>
+            <li>Melatih dan membandingkan 3 algoritma klasifikasi: Multinomial Naive Bayes, Logistic Regression, dan Linear SVM.</li>
+            <li>Melakukan validasi silang 5-Fold Stratified Cross Validation untuk membuktikan stabilitas model secara ilmiah.</li>
+          </ul>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[B] Tujuan Implementasi Web &amp; Edukasi</div>
+          <ul style="font-size: 0.85rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6;">
+            <li>Membangun aplikasi web interaktif menggunakan Streamlit dengan tata letak responsif dan sistem desain profesional.</li>
+            <li>Mengintegrasikan modul deteksi dwibahasa otomatis (Indonesia &amp; Inggris).</li>
+            <li>Menyediakan pemindai teks real-time, pengujian batch CSV, serta dashboard transparansi evaluasi model.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="grid-4">
+        <div class="stat-box">
+          <div class="stat-value">&gt; 95%</div>
+          <div class="stat-label">Target Akurasi Uji</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">&gt; 90%</div>
+          <div class="stat-label">Target Recall Penipuan</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">100%</div>
+          <div class="stat-label">Target Recall Normal</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">&lt; 50 ms</div>
+          <div class="stat-label">Latensi Inferensi</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab C - Tujuan &amp; Target Capaian</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 3 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 4: BAB D - STUDI LITERATUR & RUJUKAN ILMIAH
+       ======================================================================== -->
+  <section class="slide" id="slide-4">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB D</span>
+        <h2 class="slide-title">Studi Literatur (5 Artikel Ilmiah Rujukan)</h2>
+      </div>
+      <div class="slide-badge-info">
+        LANDASAN TEORI &amp;<br>
+        STATE-OF-THE-ART
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <table class="custom-table">
+        <thead>
+          <tr>
+            <th style="width: 20%;">Peneliti &amp; Tahun</th>
+            <th style="width: 25%;">Judul Publikasi</th>
+            <th style="width: 25%;">Metode yang Digunakan</th>
+            <th style="width: 30%;">Kontribusi Terhadap Proyek Kami</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Wibisono et al. (2020)</b></td>
+            <td>Indonesian SMS Spam &amp; Fraud Classification</td>
+            <td>TF-IDF, Naive Bayes, SVM</td>
+            <td>Menjadi rujukan dataset primer lokal 3 kelas (Normal, Penipuan, Promosi) yang diaudit ulang.</td>
+          </tr>
+          <tr>
+            <td><b>Al-Aiyan et al. (2022)</b></td>
+            <td>Multi-Class Smishing Detection via NLP</td>
+            <td>N-Gram TF-IDF, Logistic Regression</td>
+            <td>Membuktikan n-gram (1,2) efektif menangkap kombinasi frasa urgensi seperti "rekening diblokir".</td>
+          </tr>
+          <tr>
+            <td><b>Mamat et al. (2021)</b></td>
+            <td>Slang Normalization for Southeast Asian SMS</td>
+            <td>Dictionary-based Rule Engine</td>
+            <td>Menjadi dasar perancangan kamus 100+ lema kata alay (misal: dpt, rek, hub, tsel).</td>
+          </tr>
+          <tr>
+            <td><b>Jurafsky &amp; Martin (2023)</b></td>
+            <td>Speech and Language Processing (3rd Ed)</td>
+            <td>Sublinear TF Scaling &amp; Softmax</td>
+            <td>Mengadopsi sublinear term frequency 1+log(TF) untuk meredam kata yang mendominasi frekuensi.</td>
+          </tr>
+          <tr>
+            <td><b>Pedregosa et al. (2011)</b></td>
+            <td>Scikit-learn: Machine Learning in Python</td>
+            <td>Stratified K-Fold Cross Validation</td>
+            <td>Standar implementasi pipeline pelatihan bebas kebocoran data (*zero data leakage*).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab D - Studi Literatur</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 4 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 5: BAB E - DATASET & KARAKTERISTIK DATA
+       ======================================================================== -->
+  <section class="slide" id="slide-5">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB E</span>
+        <h2 class="slide-title">Dataset &amp; Standardisasi Format Data</h2>
+      </div>
+      <div class="slide-badge-info">
+        AUDIT DATASET &amp;<br>
+        UNIVERSAL SCHEMA (14 KOLOM)
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2" style="margin-bottom: 1.2rem;">
+        <div class="card-box">
+          <div class="card-title">[1] Dataset Primer Indonesia (Bersih)</div>
+          <p class="card-desc" style="margin-bottom: 0.6rem;">
+            Dataset awal 1.143 baris diaudit secara ketat. Ditemukan 0 missing value, dan 5 baris redudan berhasil dibersihkan, menghasilkan <b>1.138 SMS unik</b>:
+          </p>
+          <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.2rem;">
+            <li><b>Kelas 0 (Normal)</b>: 567 SMS (49.82%)</li>
+            <li><b>Kelas 1 (Penipuan)</b>: 332 SMS (29.17%)</li>
+            <li><b>Kelas 2 (Promosi)</b>: 239 SMS (21.00%)</li>
+          </ul>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">[2] Standardisasi Skema 14 Kolom Seragam</div>
+          <p class="card-desc">
+            Untuk menyamakan struktur dengan dataset korpus internasional (Inggris 10.607 baris), dibentuk Universal Schema 14 kolom seragam:
+          </p>
+          <div style="font-family: monospace; font-size: 0.75rem; background: #ffffff; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color); margin-top: 0.4rem;">
+            id_pesan, teks_mentah, teks_bersih, label_kelas, kategori, bahasa, jumlah_karakter, jumlah_kata, ada_url, ada_nomor_telepon, ada_nominal_uang, ada_kode_ussd, waktu_audit, status_validasi
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-3">
+        <div class="stat-box">
+          <div class="stat-value">1.138</div>
+          <div class="stat-label">SMS Indonesia Standar</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">10.607</div>
+          <div class="stat-label">SMS Inggris Standar</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">14 Kolom</div>
+          <div class="stat-label">Skema Universal Identik</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab E - Dataset &amp; Karakteristik Data</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 5 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 6: BAB F - EXPLORATORY DATA ANALYSIS (EDA)
+       ======================================================================== -->
+  <section class="slide" id="slide-6">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB F</span>
+        <h2 class="slide-title">Temuan Utama Exploratory Data Analysis (EDA)</h2>
+      </div>
+      <div class="slide-badge-info">
+        STATISTIK DESKRIPTIF &amp;<br>
+        POLA PEMBEDA ANTAR KELAS
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3" style="margin-bottom: 1.2rem;">
+        <div class="card-box">
+          <div class="card-title">[1] Anomali Panjang Teks</div>
+          <p class="card-desc">
+            SMS Normal berkarakteristik sangat pendek (rata-rata <b>70.5 karakter</b>, median 59). Sebaliknya, SMS Penipuan rata-rata <b>150.6 karakter</b> dan Promosi <b>140.6 karakter</b> untuk memuat instruksi panjang dan tautan.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[2] Indikator Siber (Heuristik)</div>
+          <p class="card-desc">
+            78.3% SMS Penipuan memuat tautan web (shortlink), dan 64.2% mencantumkan nomor kontak pribadi/WhatsApp. Pada SMS normal, kemunculan tautan dan nomor ponsel mendekati <b>0%</b>.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[3] Leksikon Kata Pembeda</div>
+          <p class="card-desc">
+            Penipuan didominasi kata: <i>pinjaman, tunai, hadiah, cek, shopee, rekening, bunga 0%</i>. Promosi didominasi: <i>kuota, paket, gb, flash, telkomsel</i>. Normal: <i>kuliah, perpus, jam, makan, besok</i>.
+          </p>
+        </div>
+      </div>
+
+      <div class="card-box solid-highlight">
+        <b class="card-title" style="font-size: 0.88rem;">Korelasi Pearson Terhadap Label Penipuan:</b>
+        <p class="card-desc" style="font-size: 0.82rem;">
+          Fitur heuristik tautan URL (r = +0.68) dan nomor kontak pribadi (r = +0.61) memiliki korelasi linear positif paling kuat terhadap klasifikasi penipuan, membuktikan bahwa indikator siber sangat valid mendukung Machine Learning.
+        </p>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab F - Exploratory Data Analysis</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 6 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 7: BAB G - PREPROCESSING & ENTITY MASKING
+       ======================================================================== -->
+  <section class="slide" id="slide-7">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB G</span>
+        <h2 class="slide-title">Pipeline Preprocessing &amp; Entity Masking</h2>
+      </div>
+      <div class="slide-badge-info">
+        REDUKSI OVERFITTING &amp;<br>
+        NORMALISASI BAHASA GAUL
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2" style="margin-bottom: 1.2rem;">
+        <div class="card-box">
+          <div class="card-title">[1] Kamus Slang Bahasa Indonesia (100+ Lema)</div>
+          <p class="card-desc" style="margin-bottom: 0.5rem;">
+            Menormalisasi singkatan SMS menjadi bentuk baku untuk menyatukan representasi fitur:
+          </p>
+          <ul style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+            <li><code>dpt</code> &rarr; dapat | <code>sy</code> &rarr; saya | <code>hub</code> &rarr; hubungi</li>
+            <li><code>rek</code> &rarr; rekening | <code>tsel</code> &rarr; telkomsel | <code>pinjol</code> &rarr; pinjaman online</li>
+            <li><code>bca/bri</code> &rarr; bank | <code>jt/juta</code> &rarr; juta | <code>lgsg</code> &rarr; langsung</li>
+          </ul>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">[2] Entity Masking Berbasis Regular Expression</div>
+          <p class="card-desc" style="margin-bottom: 0.5rem;">
+            Mengganti token unik dengan representasi generic token:
+          </p>
+          <ul style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5;">
+            <li>URL / Tautan Web &rarr; diganti menjadi <code>[url]</code></li>
+            <li>Nomor Telepon / WA GSM &rarr; diganti menjadi <code>[nomor]</code></li>
+            <li>Nominal Uang Rupiah / Valas &rarr; diganti menjadi <code>[nominal]</code></li>
+            <li>Kode USSD Dial Operator &rarr; diganti menjadi <code>[kode]</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <b>Justifikasi Ilmiah Entity Masking:</b> Jika URL (seperti <i>bit.ly/undian123</i>) dibiarkan mentah, model akan menghafal link spesifik tersebut dan gagal mendeteksi link baru (*overfitting*). Dengan token <code>[url]</code>, model mempelajari pola bahwa *"keberadaan tautan"* adalah ciri khas penipuan.
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab G - Preprocessing &amp; Entity Masking</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 7 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 8: BAB H - PENGEMBANGAN MODEL & METODOLOGI TRAINING
+       ======================================================================== -->
+  <section class="slide" id="slide-8">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB H</span>
+        <h2 class="slide-title">Pengembangan Model &amp; Metodologi Pelatihan</h2>
+      </div>
+      <div class="slide-badge-info">
+        STRATIFIED 80:20 SPLIT &amp;<br>
+        5-FOLD CROSS VALIDATION
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3" style="margin-bottom: 1.2rem;">
+        <div class="card-box">
+          <div class="card-title">1. Ekstraksi Fitur TF-IDF</div>
+          <p class="card-desc">
+            Menggunakan <code>TfidfVectorizer</code> dengan konfigurasi:
+            <br>&bull; N-Gram range: (1, 2)
+            <br>&bull; Min document frequency: 2
+            <br>&bull; Sublinear TF: True (1 + log(tf))
+            <br>Menghasilkan <b>3.006 dimensi fitur leksikal</b>.
+          </p>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">2. Pembagian Data Uji Murni</div>
+          <p class="card-desc">
+            Menerapkan <b>Stratified 80:20 Split</b>:
+            <br>&bull; Data Latih: <b>910 sampel</b> (80%)
+            <br>&bull; Data Uji Independen: <b>228 sampel</b> (20%)
+            <br>Data uji diisolasi murni untuk mencegah *data leakage*.
+          </p>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">3. 3 Algoritma Pembanding</div>
+          <p class="card-desc">
+            Melatih dan menala hiperparameter 3 algoritma wajib:
+            <br>&bull; <b>Multinomial Naive Bayes</b> (&alpha;=0.3)
+            <br>&bull; <b>Logistic Regression</b> (C=2.5, balanced)
+            <br>&bull; <b>Linear SVM</b> (CalibratedClassifierCV)
+          </p>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <b class="card-title" style="font-size: 0.88rem;">Validasi Silang (5-Fold Stratified Cross Validation):</b>
+        <p class="card-desc" style="font-size: 0.82rem;">
+          Setiap algoritma diuji kestabilannya pada 5 lipatan data latih yang berbeda untuk memastikan model tidak hanya beruntung pada satu subset data tertentu.
+        </p>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab H - Pengembangan Model</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 8 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 9: BAB I - EVALUASI KOMPARATIF & KLAIM MODEL
+       ======================================================================== -->
+  <section class="slide" id="slide-9">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB I</span>
+        <h2 class="slide-title">Evaluasi Komparatif &amp; Klaim Kinerja Model</h2>
+      </div>
+      <div class="slide-badge-info">
+        HASIL PENGUJIAN DATA UJI INDEPENDEN<br>
+        (TEST SET N=228 SAMPEL MURNI)
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <table class="custom-table" style="margin-bottom: 1.2rem;">
+        <thead>
+          <tr>
+            <th>Algoritma Model</th>
+            <th style="text-align: center;">Akurasi Uji</th>
+            <th style="text-align: center;">Macro F1-Score</th>
+            <th style="text-align: center;">Recall Penipuan</th>
+            <th style="text-align: center;">Recall Normal</th>
+            <th style="text-align: center;">5-Fold CV Macro-F1</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Multinomial Naive Bayes</b> (&alpha;=0.3)</td>
+            <td style="text-align: center;">96.05%</td>
+            <td style="text-align: center;">95.27%</td>
+            <td style="text-align: center;">89.39%</td>
+            <td style="text-align: center;">100.0%</td>
+            <td style="text-align: center;">0.9374 &plusmn; 0.0165</td>
+          </tr>
+          <tr class="highlight-row">
+            <td><b>Logistic Regression (C=2.5, Balanced) - TERPILIH</b></td>
+            <td style="text-align: center;"><b>97.37%</b></td>
+            <td style="text-align: center;"><b>96.68%</b></td>
+            <td style="text-align: center;"><b>95.45%</b></td>
+            <td style="text-align: center;"><b>100.0%</b></td>
+            <td style="text-align: center;"><b>0.9410 &plusmn; 0.0155</b></td>
+          </tr>
+          <tr>
+            <td><b>Linear SVM (Calibrated Classifier)</b></td>
+            <td style="text-align: center;">97.37%</td>
+            <td style="text-align: center;">96.68%</td>
+            <td style="text-align: center;">95.45%</td>
+            <td style="text-align: center;">100.0%</td>
+            <td style="text-align: center;">0.9360 &plusmn; 0.0116</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="grid-4">
+        <div class="stat-box">
+          <div class="stat-value">97.37%</div>
+          <div class="stat-label">Akurasi Pengujian</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">95.45%</div>
+          <div class="stat-label">Recall Penipuan</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">100.0%</div>
+          <div class="stat-label">Recall Normal</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value">0.9410</div>
+          <div class="stat-label">5-Fold CV F1-Macro</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab I - Evaluasi dan Perbandingan Model</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 9 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 10: BAB J - JUSTIFIKASI PEMILIHAN MODEL UTAMA
+       ======================================================================== -->
+  <section class="slide" id="slide-10">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB J</span>
+        <h2 class="slide-title">Justifikasi Ilmiah Pemilihan Logistic Regression</h2>
+      </div>
+      <div class="slide-badge-info">
+        CHAMPION MODEL SELECTION<br>
+        5 LANDASAN AKADEMIK
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3" style="margin-bottom: 1.2rem;">
+        <div class="card-box">
+          <div class="card-title">[1] CV Macro-F1 Tertinggi (0.9410)</div>
+          <p class="card-desc">
+            Mengungguli Naive Bayes (0.9374) dan Linear SVM (0.9360) pada validasi silang 5-lipatan. Ini membuktikan model paling konsisten di berbagai kombinasi subset data.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[2] Recall Penipuan Sangat Tinggi (95.45%)</div>
+          <p class="card-desc">
+            Dalam keamanan siber, metrik utama adalah <i>Recall Penipuan</i>. Meminimalkan *False Negative* (penipuan berbahaya lolos dianggap normal) sangat krusial agar korban tidak tertipu.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[3] Zero False Alarm pada Normal (100%)</div>
+          <p class="card-desc">
+            Tidak ada satu pun SMS normal yang salah dituduh sebagai penipuan. Komunikasi pengguna tetap aman tanpa interupsi alarm palsu.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card-box solid-highlight">
+          <div class="card-title">[4] Probabilitas Terkalibrasi Alami (Softmax)</div>
+          <p class="card-desc">
+            Logistic Regression menghasilkan nilai probabilitas terkalibrasi murni 0 s.d. 100% via fungsi <code>predict_proba()</code>, sangat ideal untuk menggerakkan meteran keyakinan di web.
+          </p>
+        </div>
+        <div class="card-box solid-highlight">
+          <div class="card-title">[5] Transparansi &amp; Interpretabilitas Tinggi</div>
+          <p class="card-desc">
+            Bobot koefisien (w) dapat dibedah secara transparan (*Explainable AI*) untuk memverifikasi kata apa yang memicu keputusan model (misal: <code>[nomor]</code>, <code>pinjaman</code>, <code>rekening</code>).
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab J - Pemilihan Model Terbaik</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 10 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 11: BAB J (LANJUTAN) - OVERFITTING CHECK & ERROR ANALYSIS
+       ======================================================================== -->
+  <section class="slide" id="slide-11">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB J (LANJUTAN)</span>
+        <h2 class="slide-title">Pemeriksaan Overfitting &amp; Analisis Kesalahan</h2>
+      </div>
+      <div class="slide-badge-info">
+        ANALISIS GENERALISASI &amp;<br>
+        BEDAH 6 ERROR (RATE 2.63%)
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2" style="margin-bottom: 1.2rem;">
+        <div class="card-box">
+          <div class="card-title">[A] Pembuktian Model Bebas Overfitting (Good Fit)</div>
+          <table class="custom-table" style="margin-top: 0.5rem; font-size: 0.8rem;">
+            <thead>
+              <tr>
+                <th>Dataset</th>
+                <th>Akurasi</th>
+                <th>Macro F1-Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Data Latih (Train N=910)</td>
+                <td>99.45%</td>
+                <td>99.38%</td>
+              </tr>
+              <tr>
+                <td>Data Uji (Test N=228)</td>
+                <td>97.37%</td>
+                <td>96.68%</td>
+              </tr>
+              <tr class="highlight-row">
+                <td><b>Selisih Gap (Train - Test)</b></td>
+                <td><b>+2.08%</b></td>
+                <td><b>+2.70%</b></td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="card-desc" style="font-size: 0.78rem; margin-top: 0.4rem;">
+            Gap &lt; 3% membuktikan model berada pada kondisi <b>Optimal / Good Fit</b> dan tidak menghafal data latihan.
+          </p>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">[B] Bedah 6 Kasus Kesalahan Prediksi (Error Analysis)</div>
+          <ul style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; padding-left: 1.2rem;">
+            <li><b>Kasus 1 &amp; 2 (Social Engineering Santai)</b>: Penipuan gaya percakapan informal (<i>"Bella bingung bang..."</i>) tanpa kata finansial terprediksi Normal (FN).</li>
+            <li><b>Kasus 3 (Penipuan Berkedok Promo)</b>: Undian kuota palsu yang meniru persis struktur buletin operator terprediksi Promosi (FP Promo).</li>
+            <li><b>Kasus 4 s.d. 6 (SMS Perbankan Resmi)</b>: Notifikasi transaksi bank yang memuat kata <i>"PIN rahasia"</i> dan <i>"rekening"</i> terpicu menjadi Penipuan.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout">
+        <b>Solusi Rekayasa Sistem:</b> Mengintegrasikan <i>Heuristic Cyber Threat Engine</i> yang memindai parameter di luar teks (apakah nomor pengirim GSM 08xx pribadi atau Sender ID resmi corporate) untuk melengkapi kelemahan model NLP statistik.
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab J - Analisis Model &amp; Error Analysis</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 11 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 12: BAB K - ARSITEKTUR SISTEM & ALUR KERJA DATA
+       ======================================================================== -->
+  <section class="slide" id="slide-12">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB K</span>
+        <h2 class="slide-title">Arsitektur Sistem &amp; Alur Data (End-to-End)</h2>
+      </div>
+      <div class="slide-badge-info">
+        HYBRID AI ARCHITECTURE<br>
+        7-STAGE DATA FLOW PIPELINE
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="flow-diagram">
+        <div class="flow-step">
+          <b>1. Ingestion</b>
+          <p>Teks SMS / Batch File CSV</p>
+        </div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">
+          <b>2. Deteksi Bahasa</b>
+          <p>Profiling Otomatis (ID vs EN)</p>
+        </div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">
+          <b>3. Preprocessing</b>
+          <p>Kamus Slang + Masking [url], [nomor]</p>
+        </div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">
+          <b>4. TF-IDF</b>
+          <p>3.006 N-Gram (1,2) Leksikal</p>
+        </div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">
+          <b>5. Inferensi ML</b>
+          <p>Logistic Regression Softmax Probs</p>
+        </div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">
+          <b>6. Heuristic Engine</b>
+          <p>Skor Risiko Siber (0 - 100)</p>
+        </div>
+        <div class="flow-arrow">&rarr;</div>
+        <div class="flow-step">
+          <b>7. Output Web</b>
+          <p>Visual Diagnosis &amp; Rekomendasi</p>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-top: 1.5rem;">
+        <div class="card-box">
+          <div class="card-title">Komponen Machine Learning Statistik</div>
+          <p class="card-desc">
+            Model Logistic Regression mengevaluasi bobot probabilitas leksikal teks secara matematis untuk menetapkan probabilitas kelas Normal, Penipuan, dan Promosi.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">Komponen Aturan Heuristik Keamanan Siber</div>
+          <p class="card-desc">
+            Mendeteksi shortlink berbahaya, file unduhan <code>.APK</code> peretas OTP, nomor ponsel pribadi pengirim klaim uang, dan kode USSD dial manipulatif.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab K - Implementasi Aplikasi</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 12 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 13: BAB L - FITUR APLIKASI WEB & DEMONSTRASI
+       ======================================================================== -->
+  <section class="slide" id="slide-13">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB L</span>
+        <h2 class="slide-title">Implementasi Antarmuka Web Interaktif</h2>
+      </div>
+      <div class="slide-badge-info">
+        STREAMLIT APPLICATION<br>
+        SOLID THEME &amp; LIQUID HERO
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-4" style="margin-bottom: 1.5rem;">
+        <div class="card-box">
+          <div class="card-title">1. Live SMS Scanner</div>
+          <p class="card-desc">
+            Input teks SMS dengan tombol preset 5 kasus nyata, meteran probabilitas 3-kelas, dan panduan mitigasi keamanan pengguna.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">2. Batch CSV Scanner</div>
+          <p class="card-desc">
+            Fitur pengunggahan file CSV untuk pemindaian massal otomatis ribuan SMS sekaligus tombol ekspor hasil unduhan.
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">3. Model Benchmark</div>
+          <p class="card-desc">
+            Visualisasi tabel metrik evaluasi komparatif, heatmap matriks konfusi, dan grafik bobot kata penentu (*Feature Importance*).
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">4. Modul Edukasi</div>
+          <p class="card-desc">
+            Kartu anatomi 4 modus smishing paling marak di Indonesia (Modus APK Kurir, Undian Shopee, Pinjol Ilegal, Blokir Rekening).
+          </p>
+        </div>
+      </div>
+
+      <div class="card-box solid-highlight">
+        <b class="card-title" style="font-size: 0.88rem;">Standar Desain Antarmuka:</b>
+        <p class="card-desc" style="font-size: 0.82rem;">
+          Mengadopsi sistem desain solid color berwibawa (Forest Green, Slate, White, Emerald, Crimson, Amber), tanpa emotikon, tanpa warna neon, serta dilengkapi efek visual <i>liquid wave morphing</i> pada bagian hero banner.
+        </p>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab L - Demo Project &amp; Antarmuka Web</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 13 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 14: BAB M - KESIMPULAN PROYEK
+       ======================================================================== -->
+  <section class="slide" id="slide-14">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB M</span>
+        <h2 class="slide-title">Kesimpulan Temuan Proyek</h2>
+      </div>
+      <div class="slide-badge-info">
+        RINGKASAN AKADEMIK &amp;<br>
+        VALIDASI HIPOTESIS
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3" style="margin-bottom: 1.5rem;">
+        <div class="card-box">
+          <div class="card-title">[1] Keunggulan Logistic Regression</div>
+          <p class="card-desc">
+            Model Logistic Regression (C=2.5, Balanced) terbukti unggul dengan <b>Akurasi 97.37%</b>, <b>Recall Penipuan 95.45%</b>, <b>Recall Normal 100%</b>, dan rata-rata 5-Fold CV Macro-F1 tertinggi (0.9410).
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[2] Peran Krusial Entity Masking</div>
+          <p class="card-desc">
+            Penyamaran entitas <code>[url]</code>, <code>[nomor]</code>, <code>[nominal]</code>, dan <code>[kode]</code> berhasil menekan selisih overfitting train-test menjadi hanya <b>+2.08%</b> (Good Fit).
+          </p>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[3] Efektivitas Arsitektur Hybrid</div>
+          <p class="card-desc">
+            Kombinasi model statistik NLP dengan aturan heuristik siber menutup kelemahan klasifikasi berbasis kata murni dan mampu mendeteksi file berbahaya <code>.APK</code>.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <b>Pencapaian Target:</b> Seluruh target awal proyek (Akurasi &gt; 95%, Recall Penipuan &gt; 90%, Zero False Alarms Normal, dan deployment web interaktif) berhasil terpenuhi 100%.
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab M - Kesimpulan Proyek</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 14 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 15: BAB N - KETERBATASAN & PENGEMBANGAN LANJUTAN
+       ======================================================================== -->
+  <section class="slide" id="slide-15">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB N</span>
+        <h2 class="slide-title">Keterbatasan &amp; Rencana Riset Lanjutan</h2>
+      </div>
+      <div class="slide-badge-info">
+        REFLEKSI AKADEMIK &amp;<br>
+        FUTURE RESEARCH ROADMAP
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-2" style="margin-bottom: 1.5rem;">
+        <div class="card-box">
+          <div class="card-title">[A] Keterbatasan Proyek Saat Ini</div>
+          <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6;">
+            <li><b>Volume Dataset Lokal</b>: Korpus Indonesia berjumlah 1.138 baris; masih memerlukan pengayaan korpus dialek daerah.</li>
+            <li><b>Modus Social Engineering Halus</b>: Penipuan tanpa tautan dan tanpa kata finansial (berkedok salah sambung) masih berpotensi menghasilkan false negative.</li>
+            <li><b>Statik URL Analysis</b>: Sistem mendeteksi keberadaan URL namun belum melakukan pemindaian isi file APK secara dinamis (*sandbox sandbox detonation*).</li>
+          </ul>
+        </div>
+        <div class="card-box">
+          <div class="card-title">[B] Rencana Riset &amp; Pengembangan Lanjutan</div>
+          <ul style="font-size: 0.82rem; color: var(--text-muted); padding-left: 1.2rem; line-height: 1.6;">
+            <li><b>Implementasi Transformer (IndoBERT)</b>: Eksperimen fine-tuning model deep learning kontekstual untuk menangkap makna semantik terselubung.</li>
+            <li><b>Ekstensi Peramban &amp; Mobile App</b>: Mengintegrasikan model ke dalam aplikasi Android berbasis SMS BroadcastReceiver untuk proteksi on-device.</li>
+            <li><b>Crowdsourced Threat Intelligence</b>: Membuka API pelaporan nomor dan tautan penipuan baru dari komunitas pengguna.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card-box solid-highlight">
+        <b class="card-title" style="font-size: 0.88rem;">Saran Implementasi Industri:</b>
+        <p class="card-desc" style="font-size: 0.82rem;">
+          Sistem ini dapat diintegrasikan sebagai *middleware spam firewall* pada SMS Gateway operator seluler untuk memblokir pesan penipuan sebelum sampai ke perangkat pengguna akhir.
+        </p>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab N - Keterbatasan &amp; Pengembangan</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 15 / 16</span>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SLIDE 16: BAB O - PEMBAGIAN TUGAS & PENUTUP (CLOSING)
+       ======================================================================== -->
+  <section class="slide dark-theme" id="slide-16">
+    <div class="slide-header">
+      <div>
+        <span class="slide-tag">BAB O &amp; PENUTUP</span>
+        <h2 class="slide-title">Pembagian Tugas Kelompok &amp; Sesi Tanya Jawab</h2>
+      </div>
+      <div class="slide-badge-info">
+        AKUNTABILITAS ANGGOTA<br>
+        M15 FINAL PRESENTATION
+      </div>
+    </div>
+
+    <div class="slide-body">
+      <div class="grid-3" style="margin-bottom: 2rem;">
+        <div class="card-box">
+          <div class="card-title">Mahasiswa 1 (NIM ...)</div>
+          <p class="card-desc">
+            <b>Data Engineer &amp; EDA Lead:</b>
+            <br>&bull; Audit dataset &amp; penanganan missing value
+            <br>&bull; Deduplikasi teks &amp; standardisasi 14 kolom
+            <br>&bull; Analisis statistik deskriptif &amp; visualisasi EDA
+            <br>&bull; Dokumentasi karakteristik data (Bab E &amp; F)
+          </p>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">Mahasiswa 2 (NIM ...)</div>
+          <p class="card-desc">
+            <b>Machine Learning Engineer:</b>
+            <br>&bull; Pipeline normalisasi slang &amp; entity masking
+            <br>&bull; Ekstraksi fitur TF-IDF N-Gram (1,2)
+            <br>&bull; Pelatihan 3 algoritma &amp; 5-Fold Cross Validation
+            <br>&bull; Analisis overfitting &amp; error analysis (Bab H, I, J)
+          </p>
+        </div>
+
+        <div class="card-box">
+          <div class="card-title">Mahasiswa 3 (NIM ...)</div>
+          <p class="card-desc">
+            <b>Web Developer &amp; Deployment Lead:</b>
+            <br>&bull; Perancangan antarmuka Streamlit &amp; UI tokens
+            <br>&bull; Integrasi model biner .joblib &amp; rule engine
+            <br>&bull; Pengujian Single Scanner &amp; Batch CSV Upload
+            <br>&bull; Penyusunan slide PPT &amp; skenario demo video (Bab K &amp; L)
+          </p>
+        </div>
+      </div>
+
+      <div style="text-align: center;">
+        <h3 style="font-family: var(--font-display); font-size: 2rem; color: #ffffff; margin-bottom: 0.5rem;">
+          TERIMA KASIH
+        </h3>
+        <p style="color: #cbd5e1; font-size: 0.95rem;">
+          Sesi Tanya Jawab &amp; Diskusi Terbuka (Q&amp;A)
+        </p>
+      </div>
+    </div>
+
+    <div class="slide-footer">
+      <span>Bab O - Pembagian Tugas &amp; Penutup</span>
+      <span>SmishingGuard System Architecture</span>
+      <span>Halaman 16 / 16</span>
+    </div>
+  </section>
+
+</div>
+
+<!-- ==============================================================================
+     NAVIGATION CONTROLLER BAR (SCREEN BOTTOM)
+     ============================================================================== -->
+<div class="nav-controller">
+  <button class="nav-btn" id="prevBtn" title="Slide Sebelumnya (Panah Kiri)">&larr; Prev</button>
+  <span class="slide-counter" id="slideCounter">Slide 1 / 16</span>
+  <button class="nav-btn primary" id="nextBtn" title="Slide Berikutnya (Panah Kanan)">Next &rarr;</button>
+  <button class="nav-btn" id="fullscreenBtn" title="Layar Penuh (F)">Fullscreen</button>
+  <button class="nav-btn" id="printBtn" title="Cetak / Simpan PDF untuk PPT">Print / Export PDF</button>
+</div>
+
+<script>
+// ==============================================================================
+// SLIDE DECK INTERACTION & KEYBOARD CONTROLLER
+// ==============================================================================
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+let currentSlide = 0;
+
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const slideCounter = document.getElementById('slideCounter');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+const printBtn = document.getElementById('printBtn');
+
+function showSlide(index) {
+  if (index < 0) index = 0;
+  if (index >= totalSlides) index = totalSlides - 1;
+  currentSlide = index;
+
+  slides.forEach((slide, idx) => {
+    slide.classList.toggle('active', idx === currentSlide);
+  });
+
+  slideCounter.textContent = `Slide ${currentSlide + 1} / ${totalSlides}`;
+  prevBtn.disabled = (currentSlide === 0);
+  nextBtn.disabled = (currentSlide === totalSlides - 1);
+  prevBtn.style.opacity = (currentSlide === 0) ? '0.4' : '1';
+  nextBtn.style.opacity = (currentSlide === totalSlides - 1) ? '0.4' : '1';
+}
+
+function nextSlide() {
+  if (currentSlide < totalSlides - 1) {
+    showSlide(currentSlide + 1);
+  }
+}
+
+function prevSlide() {
+  if (currentSlide > 0) {
+    showSlide(currentSlide - 1);
+  }
+}
+
+// Event Listeners
+nextBtn.addEventListener('click', nextSlide);
+prevBtn.addEventListener('click', prevSlide);
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault();
+    nextSlide();
+  } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
+    prevSlide();
+  } else if (e.key === 'Home') {
+    e.preventDefault();
+    showSlide(0);
+  } else if (e.key === 'End') {
+    e.preventDefault();
+    showSlide(totalSlides - 1);
+  } else if (e.key.toLowerCase() === 'f') {
+    toggleFullscreen();
+  }
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => alert(`Gagal fullscreen: ${err.message}`));
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+printBtn.addEventListener('click', () => {
+  window.print();
+});
+
+// Initialize
+showSlide(0);
+</script>
+
+</body>
+</html>

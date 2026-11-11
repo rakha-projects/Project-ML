@@ -219,6 +219,9 @@ Project-ML/
 │   ├── index.html
 │   ├── style.css
 │   └── script.js
+├── presentasi.html                             # [SLIDE DECK PPT] File Presentasi 16:9 Lengkap (Bab A - O)
+├── laporan/                                    # Folder Berkas Laporan & Presentasi
+│   └── presentasi.html                         # Salinan berkas presentasi siap konversi ke PPT
 ├── example.html                                # Rujukan acuan sistem desain UI/UX awal
 │
 ├── Indonesia/                                  # Folder dataset SMS Indonesia
