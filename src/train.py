@@ -1,223 +1,161 @@
-"""
-Skrip Pelatihan Model Machine Learning, Hyperparameter Tuning & Evaluasi Komprehensif.
-Membandingkan 3 Algoritma: Multinomial Naive Bayes, Logistic Regression, dan Linear SVM.
-Mengekspor model dan vectorizer ke folder Project/models/ untuk digunakan di Streamlit.
-"""
-
-import os
+﻿"""Reproducible training: fit TF-IDF inside CV and reserve the test split."""
+from __future__ import annotations
+import hashlib
 import json
+from pathlib import Path
 import joblib
-import numpy as np
 import pandas as pd
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
+import sklearn
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    classification_report, confusion_matrix
-)
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix, make_scorer, recall_score
+from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
+from src.preprocessing import clean_text
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATASET_INDO = os.path.join(BASE_DIR, "Indonesia", "dataset_indonesia_standard.csv")
-DATASET_ENG = os.path.join(BASE_DIR, "Inggris", "dataset_inggris_standard.csv")
+ROOT = Path(__file__).resolve().parents[1]
+MODELS = ROOT / 'models'
+CLASS_NAMES = ['Normal', 'Penipuan', 'Promosi']
+SEED = 42
+MODEL_FILES = {
+    'Multinomial Naive Bayes': 'multinomial_naive_bayes_id.joblib',
+    'Logistic Regression': 'logistic_regression_id.joblib',
+    'Linear SVM': 'linear_svm_id.joblib',
+}
 
-MODELS_DIR = os.path.join(BASE_DIR, "models")
-os.makedirs(MODELS_DIR, exist_ok=True)
+def fingerprint(path: Path) -> str:
+    # Git may convert CRLF to LF on Cloud; source fingerprints are newline-neutral.
+    data = path.read_text(encoding='utf-8-sig').encode('utf-8') if path.suffix in {'.py', '.csv'} else path.read_bytes()
+    return hashlib.sha256(data).hexdigest()
 
-RESULTS_DIR = os.path.join(BASE_DIR, "eda_results")
-os.makedirs(RESULTS_DIR, exist_ok=True)
+def prepare_data(lang: str) -> pd.DataFrame:
+    path = ROOT / ('Indonesia/dataset_indonesia_standard.csv' if lang == 'id'
+                   else 'Inggris/dataset_inggris_standard.csv')
+    frame = pd.read_csv(path).dropna(subset=['text', 'label_3class']).copy()
+    if lang == 'en':
+        # Broad categories do not identify a unique three-class label.
+        frame = frame[frame['sub_category'].isin(
+            ['normal', 'phishing', 'job_scam', 'scam', 'marketing', 'promo'])].copy()
+    frame['cleaned_text'] = frame['text'].map(lambda text: clean_text(text, lang=lang))
+    frame = frame[frame['cleaned_text'].str.len() > 0]
+    return frame.drop_duplicates('cleaned_text').reset_index(drop=True)
 
-CLASS_NAMES = ["Normal", "Penipuan", "Promosi"]
+def split_data(frame):
+    return train_test_split(frame, test_size=0.2, random_state=SEED,
+                            stratify=frame['label_3class'])
 
-def train_and_evaluate_indonesian():
-    print("=" * 70)
-    print("PELATIHAN & EVALUASI MODEL BAHASA INDONESIA (3 KELAS)")
-    print("=" * 70)
-
-    # 1. Muat Dataset Bersih Terstandarisasi
-    df = pd.read_csv(DATASET_INDO)
-    X = df["cleaned_text"].astype(str)
-    y = df["label_3class"].astype(int)
-
-    print(f"[*] Total dataset: {len(df)} sampel")
-    print(f"    - Normal (0)   : {sum(y == 0)} ({sum(y == 0)/len(y)*100:.1f}%)")
-    print(f"    - Penipuan (1) : {sum(y == 1)} ({sum(y == 1)/len(y)*100:.1f}%)")
-    print(f"    - Promosi (2)  : {sum(y == 2)} ({sum(y == 2)/len(y)*100:.1f}%)")
-
-    # 2. Stratified Train-Test Split (80% Train : 20% Test)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.20, random_state=42, stratify=y
-    )
-    print(f"[*] Pembagian data: Train = {len(X_train)} sampel | Test = {len(X_test)} sampel")
-
-    # 3. TF-IDF Vectorizer (Hanya di-fit pada data latih untuk mencegah Data Leakage)
-    vectorizer = TfidfVectorizer(
-        ngram_range=(1, 2),
-        min_df=2,
-        sublinear_tf=True
-    )
-    X_train_vec = vectorizer.fit_transform(X_train)
-    X_test_vec = vectorizer.transform(X_test)
-    print(f"[*] Kosakata TF-IDF terbentuk: {X_train_vec.shape[1]} fitur n-gram")
-
-    # Simpan Vectorizer
-    vec_path = os.path.join(MODELS_DIR, "tfidf_vectorizer_id.joblib")
-    joblib.dump(vectorizer, vec_path)
-    print(f"[V] Vectorizer tersimpan di: {vec_path}")
-
-    # 4. Definisikan 3 Algoritma Pembanding
-    # Menggunakan CalibratedClassifierCV pada LinearSVC agar menghasilkan predict_proba() untuk Streamlit
-    models = {
-        "Multinomial Naive Bayes": MultinomialNB(alpha=0.3),
-        "Logistic Regression": LogisticRegression(C=2.5, class_weight="balanced", max_iter=1000, random_state=42),
-        "Linear SVM": CalibratedClassifierCV(LinearSVC(C=1.0, class_weight="balanced", random_state=42))
+def metrics(y_true, y_pred) -> dict:
+    report = classification_report(y_true, y_pred, labels=[0, 1, 2],
+                                   target_names=CLASS_NAMES, output_dict=True, zero_division=0)
+    return {
+        'accuracy': round(float(report['accuracy']), 4),
+        'precision_macro': round(float(report['macro avg']['precision']), 4),
+        'recall_macro': round(float(report['macro avg']['recall']), 4),
+        'f1_macro': round(float(report['macro avg']['f1-score']), 4),
+        'per_class': {name: {
+            'precision': round(float(report[name]['precision']), 4),
+            'recall': round(float(report[name]['recall']), 4),
+            'f1': round(float(report[name]['f1-score']), 4),
+            'support': int(report[name]['support']),
+        } for name in CLASS_NAMES},
+        'confusion_matrix': confusion_matrix(y_true, y_pred, labels=[0, 1, 2]).tolist(),
     }
 
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    comparison_results = []
-    confusion_matrices = {}
+def pipeline(classifier, min_df=2):
+    return Pipeline([
+        ('tfidf', TfidfVectorizer(ngram_range=(1, 2), min_df=min_df, sublinear_tf=True)),
+        ('classifier', classifier),
+    ])
 
-    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-
-    for idx, (name, clf) in enumerate(models.items()):
-        print(f"\n---> Memproses Model {idx+1}: {name}")
-        
-        # Validasi Silang (5-Fold CV pada Data Latih)
-        cv_scores = cross_val_score(clf, X_train_vec, y_train, cv=cv, scoring="f1_macro")
-        print(f"     5-Fold CV Macro-F1: {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
-
-        # Training pada keseluruhan Data Latih
-        clf.fit(X_train_vec, y_train)
-
-        # Evaluasi pada Data Uji Independen (Test Set)
-        y_pred = clf.predict(X_test_vec)
-
-        acc = accuracy_score(y_test, y_pred)
-        prec_macro = precision_score(y_test, y_pred, average="macro", zero_division=0)
-        rec_macro = recall_score(y_test, y_pred, average="macro", zero_division=0)
-        f1_macro = f1_score(y_test, y_pred, average="macro", zero_division=0)
-
-        # Metrik spesifik per-kelas
-        prec_per_class = precision_score(y_test, y_pred, average=None, zero_division=0)
-        rec_per_class = recall_score(y_test, y_pred, average=None, zero_division=0)
-        f1_per_class = f1_score(y_test, y_pred, average=None, zero_division=0)
-
-        # Confusion Matrix
-        cm = confusion_matrix(y_test, y_pred)
-        confusion_matrices[name] = cm.tolist()
-
-        # Visualisasi Confusion Matrix Heatmap
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", ax=axes[idx],
-                    xticklabels=CLASS_NAMES, yticklabels=CLASS_NAMES)
-        axes[idx].set_title(f"{name}\nAcc: {acc*100:.2f}% | F1: {f1_macro*100:.2f}%", weight="bold")
-        axes[idx].set_xlabel("Prediksi Model")
-        axes[idx].set_ylabel("Aktual (Ground Truth)")
-
-        # Simpan Model Terlatih
-        safe_name = name.lower().replace(" ", "_")
-        model_save_path = os.path.join(MODELS_DIR, f"{safe_name}_id.joblib")
-        joblib.dump(clf, model_save_path)
-        print(f"     Model disimpan di: {model_save_path}")
-
-        res = {
-            "model_name": name,
-            "accuracy": round(float(acc), 4),
-            "precision_macro": round(float(prec_macro), 4),
-            "recall_macro": round(float(rec_macro), 4),
-            "f1_macro": round(float(f1_macro), 4),
-            "cv_f1_macro_mean": round(float(cv_scores.mean()), 4),
-            "cv_f1_macro_std": round(float(cv_scores.std()), 4),
-            "recall_normal": round(float(rec_per_class[0]), 4),
-            "recall_penipuan": round(float(rec_per_class[1]), 4),
-            "recall_promosi": round(float(rec_per_class[2]), 4),
-            "f1_normal": round(float(f1_per_class[0]), 4),
-            "f1_penipuan": round(float(f1_per_class[1]), 4),
-            "f1_promosi": round(float(f1_per_class[2]), 4)
-        }
-        comparison_results.append(res)
-
-    plt.tight_layout()
-    cm_path = os.path.join(RESULTS_DIR, "confusion_matrices.png")
-    plt.savefig(cm_path, dpi=300)
-    plt.close()
-    print(f"\n[V] Visualisasi Confusion Matrix tersimpan di: {cm_path}")
-
-    # Simpan Hasil Perbandingan Model ke JSON & CSV
-    comp_df = pd.DataFrame(comparison_results)
-    comp_csv_path = os.path.join(MODELS_DIR, "model_comparison_id.csv")
-    comp_json_path = os.path.join(MODELS_DIR, "model_comparison_id.json")
-    comp_df.to_csv(comp_csv_path, index=False)
-    with open(comp_json_path, "w", encoding="utf-8") as f:
-        json.dump(comparison_results, f, indent=4)
-    print(f"[V] Tabel perbandingan tersimpan di: {comp_csv_path}")
-
-    # Tentukan Model Terbaik berdasarkan Macro-F1 dan Recall Penipuan
-    # Sorting: Prioritas Macro-F1, kemudian Recall Penipuan
-    best_res = sorted(comparison_results, key=lambda x: (x["f1_macro"], x["recall_penipuan"]), reverse=True)[0]
-    best_model_name = best_res["model_name"]
-    best_safe_name = best_model_name.lower().replace(" ", "_")
-    best_model_obj = joblib.load(os.path.join(MODELS_DIR, f"{best_safe_name}_id.joblib"))
-    
-    # Simpan pointer model terbaik
-    joblib.dump(best_model_obj, os.path.join(MODELS_DIR, "best_model_id.joblib"))
-    print(f"\n[*] MODEL TERBAIK INDONESIA: {best_model_name}")
-    print(f"    Accuracy       : {best_res['accuracy']*100:.2f}%")
-    print(f"    Macro F1-Score : {best_res['f1_macro']*100:.2f}%")
-    print(f"    Recall Penipuan: {best_res['recall_penipuan']*100:.2f}%")
-
-    return comp_df, best_model_name
-
+def train_and_evaluate_indonesian():
+    frame = prepare_data('id')
+    train, test = split_data(frame)
+    candidates = {
+        'Multinomial Naive Bayes': pipeline(MultinomialNB(alpha=0.3)),
+        'Logistic Regression': pipeline(LogisticRegression(
+            C=2.5, class_weight='balanced', max_iter=1000, random_state=SEED)),
+        'Linear SVM': pipeline(CalibratedClassifierCV(LinearSVC(
+            C=1.0, class_weight='balanced', random_state=SEED))),
+    }
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=SEED)
+    scoring = {'f1_macro': 'f1_macro', 'recall_penipuan': make_scorer(
+        recall_score, labels=[1], average='macro', zero_division=0)}
+    results, selection_scores = [], {}
+    for name, model in candidates.items():
+        scores = cross_validate(model, train['cleaned_text'], train['label_3class'],
+                                cv=cv, scoring=scoring)
+        f1 = float(scores['test_f1_macro'].mean())
+        fraud_recall = float(scores['test_recall_penipuan'].mean())
+        selection_scores[name] = (f1, fraud_recall)
+        results.append({'model_name': name,
+                        'cv_f1_macro_mean': round(f1, 4),
+                        'cv_f1_macro_std': round(float(scores['test_f1_macro'].std()), 4),
+                        'cv_recall_penipuan_mean': round(fraud_recall, 4)})
+        print(f'{name}: CV macro-F1 = {f1:.4f}', flush=True)
+    # Choose before inspecting any test result.
+    selected = max(selection_scores, key=selection_scores.get)
+    for result in results:
+        name = result['model_name']
+        model = candidates[name]
+        model.fit(train['cleaned_text'], train['label_3class'])
+        result['train'] = metrics(train['label_3class'], model.predict(train['cleaned_text']))
+        result['test'] = metrics(test['label_3class'], model.predict(test['cleaned_text']))
+        joblib.dump(model, MODELS / MODEL_FILES[name])
+    best = candidates[selected]
+    joblib.dump(best, MODELS / 'best_model_id.joblib')
+    joblib.dump(best.named_steps['tfidf'], MODELS / 'tfidf_vectorizer_id.joblib')
+    rows = []
+    for result in results:
+        row = {key: value for key, value in result.items() if key not in {'train', 'test'}}
+        row.update({key: value for key, value in result['test'].items()
+                    if key not in {'per_class', 'confusion_matrix'}})
+        row['recall_penipuan'] = result['test']['per_class']['Penipuan']['recall']
+        rows.append(row)
+    pd.DataFrame(rows).to_csv(MODELS / 'model_comparison_id.csv', index=False)
+    (MODELS / 'model_comparison_id.json').write_text(json.dumps(rows, indent=2), encoding='utf-8')
+    return {'selected_model': selected,
+            'selection_rule': 'Highest mean 5-fold CV macro-F1 on training data; fraud recall breaks ties.',
+            'dataset_rows': len(frame), 'train_rows': len(train), 'test_rows': len(test),
+            'class_distribution': {CLASS_NAMES[int(k)]: int(v) for k, v in
+                                   frame['label_3class'].value_counts().items()},
+            'models': results}
 
 def train_english_model():
-    print("\n" + "=" * 70)
-    print("PELATIHAN MODEL BAHASA INGGRIS (UNTUK FITUR MULTILINGUAL WEB)")
-    print("=" * 70)
+    frame = prepare_data('en')
+    train, test = split_data(frame)
+    model = pipeline(LogisticRegression(C=2.0, class_weight='balanced',
+                                       max_iter=1000, random_state=SEED), min_df=3)
+    model.fit(train['cleaned_text'], train['label_3class'])
+    joblib.dump(model, MODELS / 'best_model_en.joblib')
+    joblib.dump(model.named_steps['tfidf'], MODELS / 'tfidf_vectorizer_en.joblib')
+    result = {'model_name': 'Logistic Regression', 'dataset_rows': len(frame),
+              'train_rows': len(train), 'test_rows': len(test),
+              'test': metrics(test['label_3class'], model.predict(test['cleaned_text'])),
+              'note': 'English source provenance needs independent validation; results are exploratory.'}
+    print(f"English: {len(frame)} messages, accuracy = {result['test']['accuracy']:.4f}", flush=True)
+    return result
 
-    df_eng = pd.read_csv(DATASET_ENG)
-    df_eng = df_eng.dropna(subset=["cleaned_text"])
-    df_eng = df_eng[df_eng["cleaned_text"].str.strip() != ""]
-    
-    X = df_eng["cleaned_text"].astype(str)
-    y = df_eng["label_3class"].astype(int)
+def main():
+    MODELS.mkdir(exist_ok=True)
+    evaluation = {
+        'schema_version': 3, 'random_seed': SEED,
+        'scikit_learn_version': sklearn.__version__,
+        'source_sha256': {
+            'indonesia_csv': fingerprint(ROOT / 'Indonesia/dataset_indonesia_standard.csv'),
+            'english_csv': fingerprint(ROOT / 'Inggris/dataset_inggris_standard.csv'),
+            'preprocessing_py': fingerprint(ROOT / 'src/preprocessing.py'),
+        },
+        'indonesian': train_and_evaluate_indonesian(),
+        'english': train_english_model(),
+    }
+    evaluation['artifact_sha256'] = {
+        name: fingerprint(MODELS / name)
+        for name in [*MODEL_FILES.values(), 'best_model_id.joblib', 'best_model_en.joblib']}
+    (MODELS / 'evaluation.json').write_text(json.dumps(evaluation, indent=2), encoding='utf-8')
+    print(f"Selected: {evaluation['indonesian']['selected_model']}", flush=True)
 
-    # 80:20 Split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.20, random_state=42, stratify=y
-    )
-
-    vec_en = TfidfVectorizer(ngram_range=(1, 2), min_df=3, sublinear_tf=True)
-    X_train_vec = vec_en.fit_transform(X_train)
-    X_test_vec = vec_en.transform(X_test)
-
-    # Latih Logistic Regression untuk bahasa Inggris
-    clf_en = LogisticRegression(C=2.0, class_weight="balanced", max_iter=1000, random_state=42)
-    clf_en.fit(X_train_vec, y_train)
-
-    y_pred = clf_en.predict(X_test_vec)
-    acc = accuracy_score(y_test, y_pred)
-    f1 = f1_score(y_test, y_pred, average="macro")
-
-    print(f"[*] Model Inggris (Logistic Regression) Terlatih!")
-    print(f"    Akurasi: {acc*100:.2f}% | Macro F1-Score: {f1*100:.2f}%")
-
-    # Simpan artefak model Inggris
-    joblib.dump(vec_en, os.path.join(MODELS_DIR, "tfidf_vectorizer_en.joblib"))
-    joblib.dump(clf_en, os.path.join(MODELS_DIR, "best_model_en.joblib"))
-    print(f"[V] Artefak model Inggris berhasil disimpan di {MODELS_DIR}")
-
-
-if __name__ == "__main__":
-    comp_df, best_name = train_and_evaluate_indonesian()
-    train_english_model()
-
-    print("\n" + "=" * 70)
-    print("MILESTONE 4 SELESAI DENGAN SUKSES!")
-    print("=" * 70)
+if __name__ == '__main__':
+    main()

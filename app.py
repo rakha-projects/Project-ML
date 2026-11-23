@@ -1,711 +1,407 @@
-"""
-Aplikasi Web Interaktif Deteksi SMS Phishing & Spam Berbahasa Indonesia (Smishing Detector).
-Dibuat dengan Streamlit, mengadopsi estetika desain elegan dari example.html:
-- Palet Warna: Navy (#263142), Soft Gray (#f1f2f6), Slate Card (#96a2b3), Accent Emerald (#2ecc71), Coral Red (#e74c3c), Amber (#f39c12)
-- Tipografi: Plus Jakarta Sans & Poppins
-- Tata Letak: Paper-Sheet Card Container dengan Soft Shadow, Rounded Pills & Micro-interactions
-"""
+﻿"""SmishingGuard: a real model-backed Streamlit application."""
+from __future__ import annotations
 
-import os
-import sys
-import json
-import joblib
+import hashlib
+import html
+import time
+
 import pandas as pd
-import numpy as np
 import streamlit as st
 
-# Tambahkan path root Project agar bisa mengimpor src
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-if BASE_DIR not in sys.path:
-    sys.path.append(BASE_DIR)
+from src.app_data import ROOT, load_resources, parse_csv
+from src.inference import LABELS, MAX_SMS_CHARS, analyze_batch, analyze_sms, safe_csv_bytes
 
-from src.preprocessing import clean_text, extract_heuristic_features, detect_language
+st.set_page_config(page_title='SmishingGuard | Periksa SMS', layout='wide',
+                   initial_sidebar_state='collapsed')
+st.html(f"<style>{(ROOT / 'assets/app.css').read_text(encoding='utf-8-sig')}</style>")
 
-# ==============================================================================
-# 1. KONFIGURASI HALAMAN STREAMLIT
-# ==============================================================================
-st.set_page_config(
-    page_title="SmishingGuard — Deteksi SMS Phishing & Spam",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# ==============================================================================
-# 2. INJEKSI CSS KUSTOM (MENGIKUTI ESTETIKA DESAIN EXAMPLE.HTML)
-# ==============================================================================
-st.markdown("""
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-
-<style>
-    /* Styling Dasar Body & Canvas */
-    .stApp {
-        background-color: #cbd5dc;
-        font-family: 'Plus Jakarta Sans', sans-serif;
-        color: #263142;
-    }
-
-    /* Sembunyikan elemen default streamlit yang mengganggu */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
-
-    /* Kontainer Lembaran Kertas Putih (Paper-Sheet Container) */
-    .block-container {
-        max-width: 1140px !important;
-        padding-top: 1.5rem !important;
-        padding-bottom: 3.5rem !important;
-        padding-left: 2rem !important;
-        padding-right: 2rem !important;
-        background-color: #ffffff;
-        border-radius: 24px;
-        margin-top: 24px;
-        margin-bottom: 36px;
-        box-shadow: 0 25px 60px -15px rgba(30, 41, 59, 0.18);
-    }
-
-    /* Header Navigasi Brand */
-    .brand-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding-bottom: 1.25rem;
-        border-bottom: 1px solid #e2e8f0;
-        margin-bottom: 1.5rem;
-    }
-    .brand-title {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 800;
-        font-size: 1.5rem;
-        color: #263142;
-        letter-spacing: -0.02em;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .brand-badge {
-        font-size: 0.72rem;
-        background-color: #263142;
-        color: #ffffff;
-        padding: 4px 10px;
-        border-radius: 9999px;
-        font-weight: 600;
-        letter-spacing: 0.05em;
-    }
-
-    /* Hero Banner Mini */
-    .hero-card {
-        background: linear-gradient(135deg, #263142 0%, #1b2432 100%);
-        border-radius: 18px;
-        padding: 2.2rem 2.5rem;
-        color: #ffffff;
-        margin-bottom: 2rem;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 10px 25px -5px rgba(27, 36, 50, 0.25);
-    }
-    .hero-title {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 800;
-        font-size: 2.1rem;
-        line-height: 1.15;
-        letter-spacing: -0.02em;
-        margin-bottom: 0.5rem;
-    }
-    .hero-subtitle {
-        font-size: 0.95rem;
-        color: rgba(255, 255, 255, 0.85);
-        max-width: 680px;
-        line-height: 1.5;
-        margin-bottom: 0;
-    }
-
-    /* Kartu Fitur & Statistik */
-    .stat-pill {
-        background-color: #f1f2f6;
-        border-radius: 14px;
-        padding: 1rem 1.25rem;
-        border: 1px solid #e2e8f0;
-        text-align: center;
-        transition: transform 0.2s ease;
-    }
-    .stat-pill:hover {
-        transform: translateY(-2px);
-    }
-    .stat-val {
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: #263142;
-        font-family: 'Poppins', sans-serif;
-    }
-    .stat-desc {
-        font-size: 0.78rem;
-        color: #64748b;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    /* Kartu Hasil Klasifikasi */
-    .result-card-safe {
-        background: linear-gradient(135deg, #edfbf2 0%, #dcfae6 100%);
-        border: 2px solid #2ecc71;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-    .result-card-scam {
-        background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-        border: 2px solid #e74c3c;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-    .result-card-promo {
-        background: linear-gradient(135deg, #fefbeb 0%, #fef3c7 100%);
-        border: 2px solid #f39c12;
-        border-radius: 16px;
-        padding: 1.5rem;
-        margin-top: 1rem;
-    }
-
-    /* Tag Lencana Heuristik */
-    .heuristic-tag {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        margin-right: 6px;
-        margin-bottom: 6px;
-    }
-    .tag-danger {
-        background-color: #fee2e2;
-        color: #991b1b;
-        border: 1px solid #fca5a5;
-    }
-    .tag-warning {
-        background-color: #fef3c7;
-        color: #92400e;
-        border: 1px solid #fcd34d;
-    }
-    .tag-neutral {
-        background-color: #f1f5f9;
-        color: #475569;
-        border: 1px solid #cbd5e1;
-    }
-    .tag-success {
-        background-color: #dcfce7;
-        color: #166534;
-        border: 1px solid #86efac;
-    }
-
-    /* Tombol Kustom */
-    .stButton>button {
-        border-radius: 9999px !important;
-        font-weight: 600 !important;
-        padding: 0.5rem 1.5rem !important;
-        transition: all 0.2s ease !important;
-    }
-    .stButton>button:hover {
-        transform: translateY(-1px) !important;
-        box-shadow: 0 4px 12px rgba(38, 49, 66, 0.15) !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+LANGUAGES = {'Otomatis': 'auto', 'Bahasa Indonesia': 'id', 'English': 'en'}
+LANG_NAMES = {'id': 'Bahasa Indonesia', 'en': 'English'}
+COLORS = {'Normal': '#236447', 'Penipuan': '#b13b3b', 'Promosi': '#a77021'}
+EXAMPLES = {
+    'Indonesia': {
+        'Normal': 'Besok kuliah jam delapan pagi di laboratorium. Jangan lupa bawa laptop ya.',
+        'Promosi': 'Paket Flash Spesial! Nikmati kuota 25GB berlaku 30 hari hanya Rp 50.000. Aktifkan di *363*88#. Syarat dan ketentuan berlaku.',
+        'Penipuan': 'Selamat! Nomor Anda terpilih mendapat hadiah cek tunai Rp 100 juta. Segera klaim hadiah, hubungi WA 081234567890 dan kirim data rekening Anda.',
+    },
+    'English': {
+        'Normal': 'Hey, are we still meeting at the library tomorrow morning? Please bring your laptop.',
+        'Promosi': 'Special offer! Get 150 free texts and 750 minutes for only 5 pounds per week. Reply YES to subscribe. Terms apply.',
+        'Penipuan': 'URGENT! You have won a 1000 cash prize! Call 09061701461 to claim your reward immediately. Send your bank account details now.',
+    },
+}
+SHIELD = '<svg viewBox="0 0 64 72" fill="none" aria-hidden="true"><path d="M32 4 57 14v20c0 16-11 27-25 34C18 61 7 50 7 34V14L32 4Z" fill="currentColor" fill-opacity=".08" stroke="currentColor" stroke-width="2.5"/><path d="m21 35 8 8 16-19" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+CHECK = '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m4 10 4 4 8-8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
 
 
-# ==============================================================================
-# 3. FUNGSI PEMUATAN MODEL & ARTEFAK DENGAN CACHING
-# ==============================================================================
 @st.cache_resource
-def load_ml_assets():
-    models_dir = os.path.join(BASE_DIR, "models")
-    
-    # 1. Model Bahasa Indonesia
-    vec_id = joblib.load(os.path.join(models_dir, "tfidf_vectorizer_id.joblib"))
-    model_id = joblib.load(os.path.join(models_dir, "best_model_id.joblib"))
-    
-    # 2. Model Bahasa Inggris
-    vec_en = joblib.load(os.path.join(models_dir, "tfidf_vectorizer_en.joblib"))
-    model_en = joblib.load(os.path.join(models_dir, "best_model_en.joblib"))
-    
-    # 3. Model Pembanding (Untuk Halaman Evaluasi)
-    nb_id = joblib.load(os.path.join(models_dir, "multinomial_naive_bayes_id.joblib"))
-    svm_id = joblib.load(os.path.join(models_dir, "linear_svm_id.joblib"))
+def resources():
+    return load_resources()
 
-    # 4. Tabel Perbandingan Metrik
-    comp_path = os.path.join(models_dir, "model_comparison_id.json")
-    with open(comp_path, "r", encoding="utf-8") as f:
-        comp_data = json.load(f)
-
-    return {
-        "vec_id": vec_id,
-        "model_id": model_id,
-        "vec_en": vec_en,
-        "model_en": model_en,
-        "nb_id": nb_id,
-        "svm_id": svm_id,
-        "comp_data": comp_data
-    }
 
 try:
-    assets = load_ml_assets()
-except Exception as e:
-    st.error(f"Gagal memuat artefak model dari folder Project/models: {e}")
+    PIPELINES, EVALUATION = resources()
+except (OSError, ValueError, KeyError, AttributeError, ImportError) as error:
+    st.error(f'Aplikasi belum dapat memuat model. {error}')
+    st.code('python -m pip install -r requirements.txt\npython -m src.train\npython -m src.evaluate')
     st.stop()
 
-
-# ==============================================================================
-# 4. NAVBAR & HEADER BRAND (MENGIKUTI NAVBAR DI EXAMPLE.HTML)
-# ==============================================================================
-st.markdown("""
-<div class="brand-header">
-    <div class="brand-title">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#263142" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        SMISHING<span style="color:#e74c3c;">GUARD</span>
-        <span class="brand-badge">ML 2026</span>
-    </div>
-    <div style="font-size: 0.82rem; color: #64748b; font-weight: 500;">
-        Sistem Klasifikasi & Proteksi Pesan Siber Dwibahasa (ID / EN)
-    </div>
-</div>
-""", unsafe_allow_html=True)
+INDO = EVALUATION['indonesian']
+SELECTED = next(model for model in INDO['models'] if model['model_name'] == INDO['selected_model'])
 
 
-# ==============================================================================
-# 5. SIDEBAR: PENGATURAN & INFORMASI AKADEMIK
-# ==============================================================================
-with st.sidebar:
-    st.markdown("### ⚙️ Konfigurasi Sistem")
-    
-    mode_bahasa = st.selectbox(
-        "Mode Deteksi Bahasa:",
-        ["Deteksi Otomatis (Auto-Detect)", "Paksa Bahasa Indonesia", "Force English (Bahasa Inggris)"],
-        index=0,
-        help="Sistem secara cerdas memilih pipeline normalisasi leksikal dan model terbaik sesuai bahasa pesan."
-    )
-
-    st.markdown("---")
-    st.markdown("### 🏆 Informasi Proyek")
-    st.markdown("""
-    - **Topik**: Text Classification (Smishing)
-    - **Dataset**: Yudi Wibisono & Corpus En (14 Kolom Seragam)
-    - **Algoritma Terpilih**: **Logistic Regression (L2)**
-    - **Akurasi Model**: **97.37%** (Test Set)
-    - **F1-Score Macro**: **96.68%**
-    - **Recall Penipuan**: **95.45%**
-    """)
-
-    st.markdown("---")
-    st.caption("Dikembangkan untuk Memenuhi Syarat Tugas Akhir Mata Kuliah Pembelajaran Mesin (Semester 5).")
+def percent(value):
+    return f'{value * 100:.2f}%'
 
 
-# ==============================================================================
-# 6. TAB NAVIGASI UTAMA
-# ==============================================================================
-tab_scanner, tab_batch, tab_eval, tab_anatomy = st.tabs([
-    "🔍 Pemindai SMS Real-Time",
-    "📁 Pemeriksaan Massal (Batch CSV)",
-    "📊 Dashboard Evaluasi & Model",
-    "🛡️ Anatomi Modus Penipuan"
-])
+def intro(title, description):
+    st.html(f'<div class="section-intro"><h2>{html.escape(title)}</h2><p>{html.escape(description)}</p></div>')
 
 
-# ==============================================================================
-# 7. TAB 1: PEMINDAI SMS REAL-TIME (SINGLE SCANNER)
-# ==============================================================================
-with tab_scanner:
-    # Hero Card Section
-    st.markdown("""
-    <div class="hero-card">
-        <div class="hero-title">Periksa Keamanan SMS Anda Seketika</div>
-        <p class="hero-subtitle">
-            Lindungi diri dari sindikat pinjaman online ilegal, penipuan undian berhadiah palsu, dan tautan phishing malware menggunakan model Machine Learning terkalibrasi tinggi.
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 3 Statistik Cepat (Mengikuti 3 Stat Badges di example.html)
-    st.markdown("""
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-        <div class="stat-pill">
-            <div class="stat-val">97.37%</div>
-            <div class="stat-desc">Akurasi Deteksi</div>
-        </div>
-        <div class="stat-pill">
-            <div class="stat-val">95.45%</div>
-            <div class="stat-desc">Recall Penipuan</div>
-        </div>
-        <div class="stat-pill">
-            <div class="stat-val">&lt; 50 ms</div>
-            <div class="stat-desc">Kecepatan Inferensi</div>
-        </div>
-        <div class="stat-pill">
-            <div class="stat-val">0% Leakage</div>
-            <div class="stat-desc">Privasi Terjaga</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Tombol Preset Contoh Pesan Cepat (One-Click Examples)
-    st.markdown("##### 💡 Coba Contoh Pesan Cepat (Quick Demo):")
-    col_ex1, col_ex2, col_ex3, col_ex4 = st.columns(4)
-    
-    preset_text = ""
-    if col_ex1.button("🟢 Contoh Normal (ID)", use_container_width=True):
-        st.session_state["sms_input"] = "Besok kuliah jam 8 pagi di lab komputer jangan lupa bawa laptop dan charger ya bro."
-    if col_ex2.button("🟡 Contoh Promosi (ID)", use_container_width=True):
-        st.session_state["sms_input"] = "[PROMO] Beli paket Flash mulai 1GB di MY TELKOMSEL APP dpt EXTRA kuota 2GB 4G LTE. Buruan cek di tsel.me/mytsel1 S&K *363#"
-    if col_ex3.button("🔴 Contoh Penipuan (ID)", use_container_width=True):
-        st.session_state["sms_input"] = "Selamat No anda m-dptkan Cek Tunai 100jt dr Shopee. PIN pemenang: 254F77 Hub WA: 082134976289 atau klik http://shopee-klaim.xyz/dana Segera lapor rek anda!"
-    if col_ex4.button("🇬🇧 Contoh Scam (EN)", use_container_width=True):
-        st.session_state["sms_input"] = "URGENT! You have won a 1000 cash prize or 1 week holiday to Hawaii! Call 09061701461 now to claim your prize. Terms apply."
-
-    # Input Area Teks SMS
-    current_input = st.session_state.get("sms_input", "")
-    sms_text = st.text_area(
-        "Tempelkan isi teks SMS yang ingin diperiksa:",
-        value=current_input,
-        height=110,
-        placeholder="Ketik atau tempel isi pesan SMS di sini...",
-        key="sms_text_area"
-    )
-
-    col_btn, col_info = st.columns([1, 3])
-    with col_btn:
-        btn_check = st.button("🛡️ Periksa SMS Sekarang", type="primary", use_container_width=True)
-    with col_info:
-        if sms_text:
-            st.caption(f"Panjang teks: **{len(sms_text)}** karakter | **{len(sms_text.split())}** kata")
-
-    # Logika Pemrosesan & Prediksi
-    if btn_check:
-        if not sms_text.strip():
-            st.warning("⚠️ Silakan masukkan teks SMS terlebih dahulu sebelum menekan tombol periksa.")
-        else:
-            # 1. Deteksi Bahasa
-            if "Indonesia" in mode_bahasa:
-                lang_code = "id"
-                lang_display = "Bahasa Indonesia (Dipaksa Manual)"
-            elif "English" in mode_bahasa:
-                lang_code = "en"
-                lang_display = "English (Forced Manual)"
-            else:
-                det = detect_language(sms_text)
-                lang_code = det["language"]
-                lang_display = f"{det['language_name']} (Keyakinan: {det['confidence']*100:.0f}%)"
-
-            # 2. Pembersihan & Ekstraksi Heuristik
-            cleaned = clean_text(sms_text, lang=lang_code)
-            heur = extract_heuristic_features(sms_text, lang=lang_code)
-
-            # 3. Inferensi Model
-            if lang_code == "en":
-                vec = assets["vec_en"]
-                model = assets["model_en"]
-            else:
-                vec = assets["vec_id"]
-                model = assets["model_id"]
-
-            vec_input = vec.transform([cleaned])
-            pred_class = model.predict(vec_input)[0]
-            pred_probs = model.predict_proba(vec_input)[0]
-
-            class_labels = ["Normal", "Penipuan", "Promosi"]
-            pred_label = class_labels[pred_class]
-            prob_safe = pred_probs[0] * 100
-            prob_scam = pred_probs[1] * 100
-            prob_promo = pred_probs[2] * 100
-
-            # 4. Tampilkan Kartu Hasil Klasifikasi
-            st.markdown("---")
-            st.markdown(f"#### 📊 Hasil Analisis Pesan | Bahasa Terdeteksi: `{lang_display}`")
-
-            if pred_label == "Penipuan":
-                st.markdown(f"""
-                <div class="result-card-scam">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="color:#991b1b; margin:0; font-family:'Poppins',sans-serif; font-weight:800;">
-                            🚨 INDIKASI PENIPUAN (PHISHING / SMISHING)
-                        </h3>
-                        <span style="background-color:#991b1b; color:#fff; padding:6px 14px; border-radius:9999px; font-weight:700; font-size:0.85rem;">
-                            Tingkat Bahaya: TINGGI
-                        </span>
-                    </div>
-                    <p style="color:#7f1d1d; margin-top:0.6rem; font-size:0.92rem; line-height:1.5;">
-                        Model mendeteksi pola manipulasi rekayasa sosial (*social engineering*), pancingan dana/hadiah, atau tautan berbahaya. 
-                        Tingkat keyakinan model: <strong>{prob_scam:.2f}%</strong>.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-
-            elif pred_label == "Promosi":
-                st.markdown(f"""
-                <div class="result-card-promo">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="color:#92400e; margin:0; font-family:'Poppins',sans-serif; font-weight:800;">
-                            📢 SMS PROMOSI / IKLAN RESMI
-                        </h3>
-                        <span style="background-color:#f59e0b; color:#fff; padding:6px 14px; border-radius:9999px; font-weight:700; font-size:0.85rem;">
-                            Tingkat Risiko: RENDAH
-                        </span>
-                    </div>
-                    <p style="color:#78350f; margin-top:0.6rem; font-size:0.92rem; line-height:1.5;">
-                        Pesan ini diidentifikasi sebagai penawaran produk, paket internet, atau buletin resmi dari operator telekomunikasi/merchant terdaftar.
-                        Tingkat keyakinan model: <strong>{prob_promo:.2f}%</strong>.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-
-            else:
-                st.markdown(f"""
-                <div class="result-card-safe">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <h3 style="color:#166534; margin:0; font-family:'Poppins',sans-serif; font-weight:800;">
-                            ✅ SMS NORMAL (KOMUNIKASI WAJAR)
-                        </h3>
-                        <span style="background-color:#16a34a; color:#fff; padding:6px 14px; border-radius:9999px; font-weight:700; font-size:0.85rem;">
-                            Status: AMAN
-                        </span>
-                    </div>
-                    <p style="color:#14532d; margin-top:0.6rem; font-size:0.92rem; line-height:1.5;">
-                        Pesan ini menunjukkan karakteristik komunikasi santai, percakapan sehari-hari, atau pesan kedinasan yang wajar tanpa indikasi ancaman siber.
-                        Tingkat keyakinan model: <strong>{prob_safe:.2f}%</strong>.
-                    </p>
-                </div>
-                """, unsafe_allow_html=True)
-
-            # 5. Bar Probabilitas Kelas
-            st.markdown("##### 📈 Distribusi Probabilitas Keyakinan Model:")
-            col_p1, col_p2, col_p3 = st.columns(3)
-            col_p1.metric("Peluang Normal", f"{prob_safe:.2f}%")
-            col_p2.metric("Peluang Penipuan", f"{prob_scam:.2f}%")
-            col_p3.metric("Peluang Promosi", f"{prob_promo:.2f}%")
-
-            # Progress bar visual
-            st.progress(max(0.0, min(1.0, prob_scam / 100.0)), text=f"Skor Ancaman Penipuan: {prob_scam:.1f}%")
-
-            # 6. Analisis Indikator Heuristik Keamanan
-            st.markdown("##### 🔬 Faktor Risiko Heuristik Terdeteksi:")
-            tag_html = ""
-            if heur["has_url"]:
-                tag_html += f'<span class="heuristic-tag tag-danger">🔗 Tautan Terdeteksi ({len(heur["urls_detected"])})</span>'
-            else:
-                tag_html += '<span class="heuristic-tag tag-neutral">Bebas Tautan</span>'
-
-            if heur["has_phone"]:
-                tag_html += f'<span class="heuristic-tag tag-danger">📞 Nomor Telepon/WA Pribadi ({len(heur["phones_detected"])})</span>'
-            else:
-                tag_html += '<span class="heuristic-tag tag-neutral">Tanpa Nomor Pribadi</span>'
-
-            if heur["has_nominal"]:
-                tag_html += f'<span class="heuristic-tag tag-warning">💰 Mencantumkan Nominal Uang</span>'
-
-            if heur["has_shortcode"]:
-                tag_html += f'<span class="heuristic-tag tag-success">🔢 Kode USSD Resmi Operator</span>'
-
-            if heur["urgency_keywords"]:
-                tag_html += f'<span class="heuristic-tag tag-danger">⏰ Kata Urgensi: {", ".join(heur["urgency_keywords"])}</span>'
-
-            if heur["financial_keywords"]:
-                tag_html += f'<span class="heuristic-tag tag-warning">💳 Istilah Finansial: {", ".join(heur["financial_keywords"])}</span>'
-
-            st.markdown(tag_html, unsafe_allow_html=True)
-
-            # 7. Teks Hasil Normalisasi (Explainability)
-            with st.expander("🛠️ Lihat Teks Hasil Preprocessing & Masking Token"):
-                st.code(cleaned, language="text")
-                st.caption("Pemberitahuan: URL diubah menjadi `[url]`, kontak menjadi `[nomor]`, dan nominal uang menjadi `[nominal]` untuk standarisasi inferensi.")
-
-            # 8. Rekomendasi Tindakan Keamanan
-            st.markdown("##### 🛡️ Rekomendasi Tindakan Pengguna:")
-            if pred_label == "Penipuan":
-                st.error("""
-                1. **JANGAN PERNAH** mengklik tautan/link yang ada di dalam pesan tersebut.
-                2. **JANGAN** menghubungi nomor telepon atau nomor WhatsApp yang dicantumkan.
-                3. **JANGAN** membagikan kode OTP, password, atau nomor rekening bank Anda kepada siapa pun.
-                4. Laporkan pengirim nomor ke layanan pengaduan resmi: **aduankonten.id (Kominfo)** atau ke CS bank resmi Anda.
-                """)
-            elif pred_label == "Promosi":
-                st.info("""
-                1. Pesan ini merupakan penawaran promo atau kuota dari operator resmi.
-                2. Jika Anda tertarik, pastikan bertransaksi hanya melalui kode dial resmi (seperti `*363#`) atau aplikasi resmi operator (MyTelkomsel, myIM3, bima+).
-                """)
-            else:
-                st.success("""
-                1. Pesan ini aman untuk dibaca dan direspon secara normal.
-                2. Tetap waspada jika di kemudian hari pengirim meminta data pribadi atau transfer uang tak terduga.
-                """)
+def reset_sms():
+    st.session_state.sms_text = ''
+    st.session_state.pop('single_result', None)
+    st.session_state.pop('single_error', None)
 
 
-# ==============================================================================
-# 8. TAB 2: PEMERIKSAAN MASSAL (BATCH CSV SCANNER)
-# ==============================================================================
-with tab_batch:
-    st.markdown("### 📁 Pemeriksaan SMS Massal via File CSV")
-    st.markdown("Unggah file CSV yang memuat daftar SMS untuk dianalisis secara otomatis oleh model Machine Learning.")
-
-    uploaded_file = st.file_uploader("Pilih file CSV:", type=["csv"])
-
-    if uploaded_file is not None:
-        try:
-            df_upload = pd.read_csv(uploaded_file)
-            st.write(f"Total baris ditemukan: **{len(df_upload)} baris**")
-
-            # Pilih Kolom Teks
-            text_columns = df_upload.select_dtypes(include=["object"]).columns.tolist()
-            if not text_columns:
-                st.error("Tidak ditemukan kolom teks dalam file CSV.")
-            else:
-                selected_col = st.selectbox("Pilih kolom yang berisi teks SMS:", text_columns)
-
-                if st.button("🚀 Mulai Pemindaian Massal", type="primary"):
-                    with st.spinner("Sedang memproses seluruh pesan..."):
-                        preds = []
-                        confidences = []
-                        risk_scores = []
-                        langs = []
-
-                        vec_id = assets["vec_id"]
-                        model_id = assets["model_id"]
-                        class_labels = ["Normal", "Penipuan", "Promosi"]
-
-                        for raw_t in df_upload[selected_col].astype(str):
-                            det = detect_language(raw_t)
-                            c_text = clean_text(raw_t, lang=det["language"])
-                            heur = extract_heuristic_features(raw_t, lang=det["language"])
-
-                            v = vec_id.transform([c_text])
-                            p = model_id.predict(v)[0]
-                            prob = model_id.predict_proba(v)[0][p] * 100
-
-                            preds.append(class_labels[p])
-                            confidences.append(round(prob, 2))
-                            risk_scores.append(heur["heuristic_risk_score"])
-                            langs.append(det["language_name"])
-
-                        df_result = df_upload.copy()
-                        df_result["Prediksi_Kategori"] = preds
-                        df_result["Keyakinan_Model_%"] = confidences
-                        df_result["Skor_Risiko_Heuristik"] = risk_scores
-                        df_result["Bahasa"] = langs
-
-                        st.success("✅ Pemindaian massal selesai!")
-
-                        # Ringkasan Distribusi
-                        c1, c2, c3 = st.columns(3)
-                        counts = df_result["Prediksi_Kategori"].value_counts()
-                        c1.metric("Total Normal (Aman)", counts.get("Normal", 0))
-                        c2.metric("Total Penipuan (Waspada)", counts.get("Penipuan", 0))
-                        c3.metric("Total Promosi", counts.get("Promosi", 0))
-
-                        # Tampilkan Dataframe Interaktif
-                        st.dataframe(df_result, use_container_width=True)
-
-                        # Tombol Unduh Hasil
-                        csv_download = df_result.to_csv(index=False).encode("utf-8")
-                        st.download_button(
-                            label="📥 Unduh Hasil Klasifikasi (CSV)",
-                            data=csv_download,
-                            file_name="Hasil_Deteksi_SMS_Batch.csv",
-                            mime="text/csv",
-                            type="secondary"
-                        )
-        except Exception as err:
-            st.error(f"Gagal memproses file CSV: {err}")
+def predict_single():
+    text = st.session_state.sms_text
+    mode = LANGUAGES[st.session_state.sms_language]
+    st.session_state.pop('single_error', None)
+    st.session_state.pop('single_result', None)
+    try:
+        started = time.perf_counter()
+        result = analyze_sms(text, mode, PIPELINES)
+        result['elapsed_ms'] = (time.perf_counter() - started) * 1000
+        st.session_state.single_result = {'text': text, 'mode': mode, 'result': result}
+    except ValueError as error:
+        st.session_state.single_error = str(error)
 
 
-# ==============================================================================
-# 9. TAB 3: DASHBOARD EVALUASI & TRANSPARANSI MODEL (ACADEMIC BENCHMARK)
-# ==============================================================================
-with tab_eval:
-    st.markdown("### 📊 Evaluasi Model & Transparansi Akademik (M15)")
-    st.markdown("Ringkasan ilmiah hasil eksperimen 3 model Machine Learning sesuai dengan rubrik tugas akhir:")
+def set_example(category):
+    collection = st.session_state.example_language
+    st.session_state.sms_text = EXAMPLES[collection][category]
+    st.session_state.sms_language = 'Bahasa Indonesia' if collection == 'Indonesia' else 'English'
+    predict_single()
 
-    # 1. Tabel Perbandingan Metrik
-    st.markdown("##### 1. Tabel Perbandingan Kinerja 3 Algoritma (Test Set N=228):")
-    comp_df = pd.DataFrame(assets["comp_data"])
-    show_cols = {
-        "model_name": "Algoritma",
-        "accuracy": "Akurasi",
-        "f1_macro": "Macro F1-Score",
-        "recall_penipuan": "Recall Penipuan",
-        "recall_normal": "Recall Normal",
-        "cv_f1_macro_mean": "5-Fold CV Macro F1"
+
+def show_result(result):
+    label = result['label']
+    confidence = result['probabilities'][label] * 100
+    st.html(f'<div class="result-card {label.lower()}"><small>Prediksi kategori pesan</small>'
+            f'<div class="result-label" style="color:{COLORS[label]}">{label}</div>'
+            f'<small>{LANG_NAMES[result["language"]]} · Keyakinan model {confidence:.1f}%</small></div>')
+    score = result['fraud_score']
+    circumference = 2 * 3.14159265 * 44
+    st.html(f'''<div class="score-row"><svg viewBox="0 0 110 110" role="img" aria-label="Skor kelas Penipuan {score:.1f} persen">
+    <circle cx="55" cy="55" r="44" fill="none" stroke="#edf1ee" stroke-width="7"/>
+    <circle cx="55" cy="55" r="44" fill="none" stroke="#b13b3b" stroke-width="7" stroke-linecap="round"
+    stroke-dasharray="{circumference * score / 100:.2f} {circumference:.2f}" transform="rotate(-90 55 55)"/>
+    <text x="55" y="58" text-anchor="middle" fill="#162d25" font-size="21" font-weight="650">{score:.1f}%</text>
+    <text x="55" y="75" text-anchor="middle" fill="#60736b" font-size="10">PENIPUAN</text></svg>
+    <div><strong>Skor kelas Penipuan</strong><p>Keluaran model dari pola teks. Skor ini tidak memverifikasi keamanan pesan atau pengirim.</p></div></div>''')
+    for name in LABELS.values():
+        value = result['probabilities'][name] * 100
+        st.html(f'<div class="probability"><div class="labels"><span>{name}</span><strong>{value:.1f}%</strong></div>'
+                f'<div class="track"><div class="fill" style="width:{value:.2f}%;background:{COLORS[name]}"></div></div></div>')
+    advice = {
+        'Penipuan': 'Tunda merespons. Jangan bagikan OTP, PIN, atau data rekening. Konfirmasi permintaan melalui kanal resmi yang Anda cari sendiri.',
+        'Promosi': 'Pesan menyerupai penawaran produk. Periksa pengirim, harga, dan syaratnya melalui aplikasi atau kanal resmi sebelum menindaklanjuti.',
+        'Normal': 'Pesan menyerupai percakapan biasa. Tetap konfirmasi jika ada permintaan uang, data pribadi, atau pemasangan aplikasi.',
     }
-    st.dataframe(comp_df[list(show_cols.keys())].rename(columns=show_cols), use_container_width=True)
-
-    # 2. Grafik Confusion Matrix & Feature Importance
-    c_img1, c_img2 = st.columns(2)
-    with c_img1:
-        st.markdown("##### 2. Confusion Matrix Heatmap:")
-        cm_file = os.path.join(RESULTS_DIR, "confusion_matrices.png")
-        if os.path.exists(cm_file):
-            st.image(cm_file, caption="Confusion Matrix 3 Model (Naive Bayes, Logistic Regression, Linear SVM)", use_container_width=True)
-    with c_img2:
-        st.markdown("##### 3. Fitur Kata Penentu (Feature Importance):")
-        fi_file = os.path.join(RESULTS_DIR, "feature_importance.png")
-        if os.path.exists(fi_file):
-            st.image(fi_file, caption="Bobot Koefisien Leksikal Penentu Kategori", use_container_width=True)
-
-    # 3. Analisis Ilmiah Generalisasi
-    st.markdown("##### 4. Analisis Overfitting & Justifikasi Ilmiah:")
-    st.info("""
-    - **Pemeriksaan Overfitting**: Logistic Regression menghasilkan Akurasi Latih **99.45%** dan Akurasi Uji **97.37%** (Gap sangat kecil yaitu **+2.08%**). Terbukti model memiliki generalisasi yang **Optimal (Good Fit)** tanpa *data leakage*.
-    - **Alasan Pemilihan Logistic Regression**: Selain akurasi dan Macro-F1 tertinggi (96.68%), model ini menghasilkan estimasi probabilitas terkalibrasi (`predict_proba()`) dan memiliki **Recall Penipuan 95.45%**, sehingga meminimalkan risiko bahaya pesan penipuan yang lolos.
-    """)
+    st.html(f'<div class="guidance"><strong>Langkah berikutnya</strong><br>{advice[label]}</div>')
+    if result['no_known_terms']:
+        st.warning('Kosakata pesan tidak dikenali model. Prediksi ini tidak cukup untuk mengambil keputusan; periksa pesan secara manual.')
+    elif confidence < 60:
+        st.warning('Model belum yakin pada satu kategori. Periksa konteks pesan dan identitas pengirim secara manual.')
+    if result['language_ambiguous']:
+        st.info('Bahasa pesan sulit dipastikan dari kata yang tersedia. Pilih bahasa secara manual untuk membandingkan hasil.')
+    if result['language'] == 'en':
+        st.caption('Model Inggris bersifat eksploratif. Asal korpus masih perlu diverifikasi independen.')
+    st.caption(f"Model: {INDO['selected_model'] if result['language'] == 'id' else EVALUATION['english']['model_name']} · Inferensi {result['elapsed_ms']:.0f} ms")
 
 
-# ==============================================================================
-# 10. TAB 4: PANDUAN EDUKASI & ANATOMI MODUS SMISHING
-# ==============================================================================
-with tab_anatomy:
-    st.markdown("### 🛡️ Panduan Edukasi: Mengenali Modus Smishing di Indonesia")
-    st.markdown("Pelajari pola taktik rekayasa sosial yang kerap digunakan oleh sindikat penipuan SMS:")
+def show_explanation(result):
+    st.divider()
+    left, right = st.columns([1, 1], gap='large')
+    with left:
+        st.subheader('Pola yang ditemukan')
+        st.caption('Indikator berbasis aturan; dihitung terpisah dari probabilitas model.')
+        heuristics = result['heuristics']
+        cols = st.columns(2)
+        patterns = [('Tautan web', 'has_url', 'urls_detected'), ('Nomor kontak', 'has_phone', 'phones_detected'),
+                    ('Nominal uang', 'has_nominal', 'nominals_detected'), ('Kode layanan', 'has_shortcode', 'codes_detected')]
+        for index, (title, flag, values) in enumerate(patterns):
+            with cols[index % 2]:
+                found = heuristics[flag]
+                st.html(f'<div class="indicator {"found" if found else ""}"><strong>{title}</strong>'
+                        f'<small>{"Terdeteksi" if found else "Tidak terdeteksi"}</small></div>')
+        with st.expander('Lihat rincian indikator'):
+            for title, flag, values in patterns:
+                if heuristics[flag]:
+                    st.write(title)
+                    st.code('\n'.join(heuristics[values]), language=None, wrap_lines=True)
+            keywords = heuristics['urgency_keywords'] + heuristics['financial_keywords']
+            st.write('Kata pemicu: ' + (', '.join(keywords) if keywords else 'Tidak ditemukan'))
+            st.caption(f"Skor aturan: {heuristics['heuristic_risk_score']}/100. Penjumlahan bobot aturan, bukan probabilitas dan tidak mengubah label model.")
+    with right:
+        st.subheader('Mengapa model memilih kategori ini?')
+        st.caption('Kata atau frasa dengan kontribusi positif pada prediksi saat ini.')
+        if result['contributions']:
+            st.html(''.join(f'<span class="term">{html.escape(term["term"])}</span>' for term in result['contributions']))
+            if result['contributions_approximate']:
+                st.caption('Perkiraan dari rata-rata bobot model SVM terkalibrasi; bukan penjelasan kausal atau probabilitas per kata.')
+        else:
+            st.caption('Tidak ada kontribusi kata positif yang dapat ditampilkan untuk pesan ini.')
+        with st.expander('Lihat teks setelah preprocessing'):
+            st.code(result['cleaned_text'], language=None, wrap_lines=True)
+            st.caption('Huruf kecil, penyamaran entitas, pembersihan karakter, lalu normalisasi singkatan. Proses yang sama digunakan saat pelatihan.')
 
-    col_m1, col_m2 = st.columns(2)
 
-    with col_m1:
-        st.markdown("""
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; margin-bottom:1rem;">
-            <h4 style="color:#b91c1c; margin-top:0;">1. Modus APK Kurir & Undangan Palsu</h4>
-            <p style="font-size:0.88rem; color:#475569; line-height:1.5;">
-                Pelaku mengirim pesan berpura-pura menjadi kurir pengantar paket (J&T, SiCepat) atau undangan pernikahan, lalu menyuruh korban mengunduh file berekstensi <code>.APK</code>. File ini adalah malware <em>SMS-Sniffer</em> yang mencuri kode OTP perbankan korban.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+def scanner():
+    intro('Kenali pesan sebelum merespons.', 'Tempel isi SMS atau coba contoh. Model membaca pola teks dalam tiga kategori.')
+    left, right = st.columns([1.15, 1], gap='large')
+    with left, st.container(key='input_panel'):
+        st.html('<div class="panel-heading"><h3>Isi pesan SMS</h3><span class="tag">Maks. 2.000 karakter</span></div>')
+        st.selectbox('Bahasa analisis', list(LANGUAGES), key='sms_language',
+                     help='Deteksi otomatis memakai aturan kata. Pilih manual untuk pesan pendek atau campuran.')
+        text = st.text_area('Teks SMS', key='sms_text', height=180, max_chars=MAX_SMS_CHARS,
+                            placeholder='Tempel pesan yang ingin diperiksa di sini…', label_visibility='collapsed')
+        st.caption(f'{len(text):,} / {MAX_SMS_CHARS:,} karakter · {len(text.split())} kata')
+        a, b = st.columns([1.4, 1])
+        a.button('Periksa pesan', type='primary', on_click=predict_single, width='stretch')
+        b.button('Kosongkan', on_click=reset_sms, width='stretch')
+        if st.session_state.get('single_error'):
+            st.error(st.session_state.single_error)
+        st.divider()
+        st.selectbox('Coba contoh pesan', list(EXAMPLES), key='example_language')
+        presets = st.columns(3)
+        for column, label in zip(presets, LABELS.values()):
+            column.button(label, key=f'preset_{label}', on_click=set_example, args=(label,), width='stretch')
+        st.caption('Contoh ilustratif untuk mencoba fitur; prediksi tetap dihitung oleh model.')
+    saved = st.session_state.get('single_result')
+    current = saved and saved['text'] == text and saved['mode'] == LANGUAGES[st.session_state.sms_language]
+    with right, st.container(key='result_panel'):
+        st.html('<div class="panel-heading"><h3>Hasil analisis</h3><span class="tag">Model ML terlatih</span></div>')
+        if current:
+            show_result(saved['result'])
+        else:
+            st.html(f'<div class="empty-result" style="color:#236447">{SHIELD}<h3>{"Pesan telah berubah" if saved else "Siap membaca pola pesan"}</h3>'
+                    '<p>Tekan Periksa pesan untuk melihat kategori, skor model, dan penjelasan kata yang berpengaruh.</p>'
+                    '<div class="empty-categories"><span>Normal</span><span>Penipuan</span><span>Promosi</span></div></div>')
+    st.caption('Privasi: teks diproses di memori sesi dan tidak ditulis ke disk oleh aplikasi. Tautan dalam SMS tidak dibuka.')
+    if current:
+        show_explanation(saved['result'])
 
-        st.markdown("""
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem;">
-            <h4 style="color:#b91c1c; margin-top:0;">2. Modus Undian Pemenang Shopee / Bank</h4>
-            <p style="font-size:0.88rem; color:#475569; line-height:1.5;">
-                Pelaku mengabarkan nomor korban memenangkan cek tunai ratusan juta rupiah lengkap dengan nomor PIN pemenang palsu dan nomor WhatsApp. Korban kemudian diminta membayar biaya administrasi atau mentransfer sejumlah uang.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
 
-    with col_m2:
-        st.markdown("""
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem; margin-bottom:1rem;">
-            <h4 style="color:#b91c1c; margin-top:0;">3. Modus Pinjaman Online (Pinjol) Ilegal</h4>
-            <p style="font-size:0.88rem; color:#475569; line-height:1.5;">
-                Penawaran pinjaman dana tunai cepat tanpa jaminan hanya dengan syarat KTP, bunga rendah (0.99%), dan cair dalam hitungan jam. Pelaku mencantumkan nomor WhatsApp pribadi atau link formulir pencurian data identitas.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+def batch():
+    intro('Periksa banyak pesan sekaligus.', 'Unggah CSV, pilih kolom teks, lalu unduh hasil lengkap dengan status setiap baris.')
+    left, right = st.columns([1.8, 1], gap='large')
+    with left, st.container(key='batch_panel'):
+        st.subheader('Unggah daftar SMS')
+        upload = st.file_uploader('Berkas CSV', type=['csv'], help='Maksimal 2 MB, 1.000 baris, dengan header kolom.')
+        opts = st.columns(3)
+        language = opts[0].selectbox('Bahasa batch', list(LANGUAGES), key='batch_language')
+        separator = opts[1].selectbox('Pemisah CSV', ['Otomatis', ',', ';', '\t'],
+                                     format_func=lambda value: {'\t': 'Tab', ',': 'Koma (,)', ';': 'Titik koma (;)'}.get(value, value))
+        encoding = opts[2].selectbox('Encoding', ['Otomatis', 'utf-8-sig', 'cp1252'],
+                                    format_func=lambda value: {'utf-8-sig': 'UTF-8', 'cp1252': 'Windows-1252'}.get(value, value))
+    with right:
+        st.subheader('Mulai dari contoh')
+        st.write('Satu baris untuk satu pesan. Kolom tambahan seperti ID tetap ikut di hasil unduhan.')
+        st.download_button('Unduh CSV contoh', data=(ROOT / 'laporan/contoh_sms.csv').read_bytes(),
+                           file_name='contoh_sms.csv', mime='text/csv', width='stretch')
+        st.caption('Maks. 2 MB · 1.000 baris · 2.000 karakter/pesan. Baris kosong atau terlalu panjang ditandai tanpa menghentikan baris lainnya.')
+    if upload is None:
+        return
+    try:
+        data = upload.getvalue()
+        frame = parse_csv(data, separator, encoding)
+    except ValueError as error:
+        st.error(str(error))
+        return
+    candidates = [col for col in frame.columns if str(col).lower().strip() in ('text', 'sms', 'teks', 'message', 'pesan')]
+    column = st.selectbox('Kolom berisi teks SMS', list(frame.columns),
+                          index=list(frame.columns).index(candidates[0]) if candidates else 0)
+    st.caption(f'{len(frame):,} baris · {len(frame.columns)} kolom · {len(data)/1024:.1f} KB')
+    with st.expander('Pratinjau data masukan', expanded=True):
+        st.dataframe(frame.head(5), hide_index=True, width='stretch')
+    signature = (hashlib.sha256(data).hexdigest(), column, language, separator, encoding)
+    if st.button('Proses semua pesan', type='primary'):
+        with st.spinner(f'Menganalisis {len(frame):,} pesan…'):
+            start = time.perf_counter()
+            output = analyze_batch(frame, column, LANGUAGES[language], PIPELINES)
+            st.session_state.batch_result = {'signature': signature, 'output': output,
+                                             'seconds': time.perf_counter() - start}
+    saved = st.session_state.get('batch_result')
+    if not saved or saved['signature'] != signature:
+        return
+    output = saved['output']
+    valid = output['Prediksi_Kategori'].isin(LABELS.values())
+    st.divider()
+    st.subheader('Ringkasan hasil batch')
+    a, b, c, d = st.columns(4)
+    a.metric('Berhasil dianalisis', f'{int(valid.sum()):,}')
+    b.metric('Perlu tinjauan', f"{int((output['Status'] == 'Perlu tinjauan').sum()):,}")
+    c.metric('Baris tidak valid', f'{int((~valid).sum()):,}')
+    d.metric('Waktu proses', f"{saved['seconds']:.2f} dtk")
+    chart_col, count_col = st.columns([1.5, 1])
+    counts = output.loc[valid, 'Prediksi_Kategori'].value_counts().reindex(list(LABELS.values()), fill_value=0)
+    with chart_col:
+        st.bar_chart(counts.rename('Jumlah pesan'), color='#236447', horizontal=True, height=220)
+    with count_col:
+        st.write('Distribusi kategori')
+        for name, count in counts.items():
+            st.write(f'{name}: **{count} pesan**')
+        st.caption('Kategori Normal maupun Promosi tidak memverifikasi pengirim atau keamanan tautan.')
+    category = st.selectbox('Filter tabel hasil', ['Semua kategori', *LABELS.values(), 'Tidak valid'])
+    filtered = output if category == 'Semua kategori' else output.loc[~valid] if category == 'Tidak valid' else output[output['Prediksi_Kategori'] == category]
+    st.dataframe(filtered, hide_index=True, width='stretch')
+    st.download_button('Unduh seluruh hasil CSV', data=safe_csv_bytes(output),
+                       file_name='Hasil_Deteksi_SMS.csv', mime='text/csv', type='primary')
+    st.caption('Unduhan selalu mencakup seluruh baris. Karakter pemicu formula spreadsheet dinetralkan pada teks ekspor.')
 
-        st.markdown("""
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:14px; padding:1.25rem;">
-            <h4 style="color:#b91c1c; margin-top:0;">4. Modus Notifikasi Rekening Diblokir</h4>
-            <p style="font-size:0.88rem; color:#475569; line-height:1.5;">
-                Pesan darurat yang mengancam bahwa kartu ATM atau rekening bank korban akan diblokir karena ada aktivitas mencurigakan. Korban diarahkan ke situs phishing palsu untuk memasukkan user ID dan PIN internet banking.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
 
+def matrix_plot(model):
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from matplotlib.colors import LinearSegmentedColormap
+    cm = np.array(model['test']['confusion_matrix'])
+    fig, ax = plt.subplots(figsize=(5, 3.6))
+    cmap = LinearSegmentedColormap.from_list('forest', ['#eff5f0', '#236447'])
+    ax.imshow(cm, cmap=cmap, vmin=0)
+    for i in range(3):
+        for j in range(3):
+            ax.text(j, i, str(cm[i, j]), ha='center', va='center', fontsize=14,
+                    color='white' if cm[i, j] > cm.max()/2 else '#162d25')
+    ax.set_xticks(range(3), list(LABELS.values()))
+    ax.set_yticks(range(3), list(LABELS.values()))
+    ax.set_xlabel('Kategori prediksi', labelpad=10)
+    ax.set_ylabel('Kategori aktual', labelpad=10)
+    ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
+    fig.tight_layout()
+    st.pyplot(fig, width='stretch')
+    plt.close(fig)
+
+
+def model_dashboard():
+    intro('Lihat bukti di balik prediksi.', 'Perbandingan tiga algoritma, data uji terpisah, dan batasan yang perlu dipahami.')
+    a, b, c, d = st.columns(4)
+    a.metric('SMS Indonesia', f"{INDO['dataset_rows']:,}")
+    b.metric('Data latih / uji', f"{INDO['train_rows']} / {INDO['test_rows']}")
+    c.metric('Macro-F1 uji terpilih', percent(SELECTED['test']['f1_macro']))
+    d.metric('Recall Penipuan', percent(SELECTED['test']['per_class']['Penipuan']['recall']))
+    st.subheader('Perbandingan model Indonesia')
+    st.caption('Model dipilih dari rata-rata macro-F1 5-fold CV data latih; recall Penipuan menjadi pemecah seri. TF-IDF dipelajari ulang dalam setiap fold.')
+    rows = []
+    for model in INDO['models']:
+        test = model['test']
+        rows.append({'Algoritma': model['model_name'], 'Pilihan': 'Model utama' if model['model_name'] == INDO['selected_model'] else 'Pembanding',
+                     'CV Macro-F1': f"{model['cv_f1_macro_mean']:.4f} ± {model['cv_f1_macro_std']:.4f}",
+                     'Akurasi uji': percent(test['accuracy']), 'Precision macro': percent(test['precision_macro']),
+                     'Recall macro': percent(test['recall_macro']), 'Macro-F1 uji': percent(test['f1_macro']),
+                     'Recall Penipuan': percent(test['per_class']['Penipuan']['recall'])})
+    st.dataframe(pd.DataFrame(rows), hide_index=True, width='stretch')
+    st.info(f"Model utama: {INDO['selected_model']}. Rata-rata CV macro-F1 {SELECTED['cv_f1_macro_mean']:.4f}. Data uji baru dinilai setelah pemilihan model.")
+    model_name = st.selectbox('Tinjau hasil algoritma', [m['model_name'] for m in INDO['models']],
+                              index=[m['model_name'] for m in INDO['models']].index(INDO['selected_model']))
+    model = next(m for m in INDO['models'] if m['model_name'] == model_name)
+    left, right = st.columns([1, 1.1], gap='large')
+    with left:
+        st.subheader('Confusion matrix')
+        matrix_plot(model)
+        cm = model['test']['confusion_matrix']
+        missed = sum(cm[1]) - cm[1][1]
+        st.caption(f'{missed} dari {sum(cm[1])} pesan Penipuan pada data uji diprediksi sebagai kategori lain. Baris = aktual; kolom = prediksi.')
+    with right, st.container(key='model_detail'):
+        st.subheader('Metrik per kategori')
+        records = [{'Kategori': name, 'Precision': percent(vals['precision']), 'Recall': percent(vals['recall']),
+                    'F1': percent(vals['f1']), 'Jumlah uji': vals['support']}
+                   for name, vals in model['test']['per_class'].items()]
+        st.dataframe(pd.DataFrame(records), hide_index=True, width='stretch')
+        st.write('Perbandingan latih dan uji')
+        train_f1, test_f1 = model['train']['f1_macro'], model['test']['f1_macro']
+        st.write(f'Macro-F1 latih **{percent(train_f1)}** · uji **{percent(test_f1)}**')
+        st.caption(f'Selisih {(train_f1-test_f1)*100:.2f} poin persentase. Selisih ini adalah indikasi pada satu split; belum membuktikan generalisasi pada pesan baru.')
+    with st.expander('Dataset dan metodologi', expanded=False):
+        l, r = st.columns(2)
+        with l:
+            st.write('Data utama Indonesia')
+            st.write('1.143 SMS mentah menjadi 1.138 pesan bersih. Sumber: korpus SMS Yudi Wibisono. Tiga kelas tetap mengikuti anotasi dataset.')
+            st.dataframe(pd.DataFrame([{'Kelas': name, 'Jumlah': amount} for name, amount in INDO['class_distribution'].items()]), hide_index=True)
+        with r:
+            st.write('Alur eksperimen')
+            st.write('Stratified split 80:20, seed 42. Kandidat memakai TF-IDF unigram dan bigram, sublinear TF. Validasi silang 5 fold dilakukan pada data latih. Heuristik ditampilkan sebagai informasi terpisah.')
+            en = EVALUATION['english']
+            st.write(f"Inggris: {en['dataset_rows']:,} pesan unik terpilih; {en['train_rows']:,} latih / {en['test_rows']:,} uji. Akurasi {percent(en['test']['accuracy'])}, macro-F1 {percent(en['test']['f1_macro'])}.")
+            st.caption('Kategori Inggris yang terlalu umum dikeluarkan. Asal korpus Inggris masih perlu diverifikasi; hasilnya bersifat eksploratif.')
+    with st.expander('Eksplorasi data (EDA)'):
+        plots = {'Distribusi kelas': '1_class_distribution.png', 'Panjang pesan': '2_length_distribution.png',
+                 'Indikator heuristik': '3_heuristic_indicators.png', 'Kata kunci': '4_top_keywords.png',
+                 'Korelasi fitur': '5_correlation_heatmap.png'}
+        plot = st.selectbox('Pilih visualisasi', list(plots))
+        st.image(str(ROOT / 'eda_results' / plots[plot]), width='stretch')
+        st.caption('EDA menggunakan korpus standar sebelum seleksi kategori Inggris untuk training. Jumlah korpus EDA Inggris berbeda dari jumlah data model Inggris.')
+    with st.expander('Keterbatasan dan analisis kesalahan'):
+        st.write('Data Indonesia relatif kecil dan lama. Bahasa campuran, ejaan tersamarkan, pesan sangat pendek, serta modus baru dapat menurunkan ketepatan. Belum ada validasi eksternal dengan SMS Indonesia terbaru.')
+        error_path = ROOT / 'models/error_analysis.csv'
+        if error_path.exists():
+            st.dataframe(pd.read_csv(error_path), hide_index=True, width='stretch')
+    st.download_button('Unduh data evaluasi JSON', data=(ROOT / 'models/evaluation.json').read_bytes(),
+                       file_name='evaluasi_smishingguard.json', mime='application/json')
+
+
+def education():
+    intro('Baca polanya. Periksa konteksnya.', 'Kenali taktik yang mendorong Anda bertindak cepat sebelum sempat memeriksa.')
+    cases = [
+        ('Hadiah & undian', 'Menang tanpa pernah ikut?', 'Nama merek, nominal hadiah besar, dan batas klaim singkat dapat dipakai untuk meminta biaya, data rekening, atau OTP.',
+         'Selamat! Anda terpilih mendapat hadiah Rp 100 juta. Klaim segera, hubungi 081234567890 dan kirim data rekening Anda.'),
+        ('Kurir & berkas APK', 'Paket menjadi alasan mengunduh.', 'Permintaan memasang aplikasi dari pesan perlu diperiksa. Nama kurir pada pesan saja tidak mengesahkan identitas pengirim.',
+         'Paket Anda tertahan karena alamat kurang lengkap. Silakan unduh berkas resi-paket.apk melalui tautan yang kami kirim.'),
+        ('Akun & rekening', 'Ancaman pemblokiran mendadak.', 'Pesan yang meminta verifikasi kredensial dengan mendesak dapat meniru komunikasi bank. Buka aplikasi resmi secara mandiri.',
+         'PERINGATAN! Rekening Anda akan diblokir hari ini. Segera kirim OTP untuk verifikasi akun dan data rekening.'),
+        ('Pinjaman & dana tunai', 'Penawaran yang terlalu mudah.', 'Janji pencairan cepat, syarat minim, dan biaya awal perlu ditinjau. Sebuah penawaran belum tentu berasal dari pihak yang disebutkan.',
+         'Pinjaman tunai langsung cair tanpa jaminan. Hubungi WA 081234567890. Transfer biaya administrasi agar dana masuk ke rekening Anda.'),
+    ]
+    for start in range(0, len(cases), 2):
+        cols = st.columns(2, gap='large')
+        for col, (kind, title, body, sample) in zip(cols, cases[start:start+2]):
+            with col:
+                st.html(f'<article class="education-card"><div class="case-type">{kind}</div><h3>{title}</h3><p>{body}</p></article>')
+                with st.expander(f'Contoh ilustratif: {kind}'):
+                    st.code(sample, language=None, wrap_lines=True)
+                    st.caption('Contoh edukasi. Gunakan pemindai untuk mencoba; model dapat salah pada pola yang belum dipelajari.')
+    st.divider()
+    left, right = st.columns(2, gap='large')
+    with left:
+        st.subheader('Jeda sebelum menindaklanjuti')
+        st.markdown('- Periksa konteks: apakah Anda mengenal pengirim dan menunggu pesan ini?\n- Cari kontak resmi secara mandiri; jangan memakai kontak dalam pesan yang diragukan.\n- Simpan bukti pesan jika perlu ditinjau atau dilaporkan.\n- Jangan membagikan OTP, PIN, atau kata sandi melalui SMS.')
+    with right:
+        st.subheader('Cara kerja SmishingGuard')
+        steps = [('Teks dibersihkan', 'Normalisasi singkatan dan penyamaran URL, nomor, nominal, serta kode layanan.'),
+                 ('Pola kata dipetakan', 'TF-IDF mengubah kata dan pasangan kata menjadi fitur numerik.'),
+                 ('Model mengklasifikasikan', 'Model terlatih memberi probabilitas untuk Normal, Penipuan, dan Promosi.'),
+                 ('Anda menilai konteks', 'Gunakan skor, kata berpengaruh, dan indikator sebagai bahan pemeriksaan awal.')]
+        st.html(''.join(f'<div class="method-step"><strong>{title}</strong><p>{body}</p></div>' for title, body in steps))
+
+
+st.html(f'''<div class="brandbar"><div class="brand">{SHIELD}<div>Smishing<span>Guard</span></div></div>
+<div class="brand-meta"><span>Proyek Machine Learning · SV IPB</span><span class="pill">Analisis SMS berbasis NLP</span></div></div>
+<section class="hero"><div class="liquid" aria-hidden="true"></div><div class="hero-main"><div>
+<div class="eyebrow">Berhenti sejenak. Periksa pesannya.</div><h1>Pesan masuk.<br><em>Jangan buru-buru percaya.</em></h1>
+<p class="hero-copy">Bantu kenali pola SMS penipuan, promosi, dan percakapan biasa. Periksa pesannya, pahami alasannya, tentukan langkah berikutnya.</p>
+<div class="hero-tags"><span>{CHECK}Indonesia & English</span><span>{CHECK}Tanpa menyimpan SMS ke disk</span></div></div>
+<div class="hero-art" aria-hidden="true"><div class="orbit"></div><div class="message-preview"><div class="preview-head"><span class="preview-symbol">SMS</span><span>Satu pesan, banyak petunjuk</span></div><div class="preview-line"></div><div class="preview-line short"></div><div class="preview-line"></div><div class="preview-classes"><span>Normal</span><span>Penipuan</span><span>Promosi</span></div></div><div class="shield-float" style="color:#a8cbb3">{SHIELD}</div></div></div>
+<div class="hero-stats"><div><strong>{INDO['dataset_rows']:,}</strong><small>SMS Indonesia bersih</small></div><div><strong>{percent(SELECTED['test']['accuracy'])}</strong><small>Akurasi pada {INDO['test_rows']} SMS uji</small></div><div><strong>3 algoritma</strong><small>Dibandingkan dengan 5-fold CV</small></div><div><strong>{INDO['selected_model']}</strong><small>Model Indonesia terpilih</small></div></div></section>''')
+
+single_tab, batch_tab, model_tab, education_tab = st.tabs(['Pemindai SMS', 'Pemeriksaan CSV', 'Tentang model', 'Panduan smishing'])
+with single_tab:
+    scanner()
+with batch_tab:
+    batch()
+with model_tab:
+    model_dashboard()
+with education_tab:
+    education()
+
+st.html('<div class="footer"><span><strong>SmishingGuard</strong> · Proyek klasifikasi SMS dengan Machine Learning</span><span>Alat bantu membaca pola. Keamanan pesan tetap perlu diverifikasi.</span></div>')

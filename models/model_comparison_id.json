@@ -1,47 +1,35 @@
 [
-    {
-        "model_name": "Multinomial Naive Bayes",
-        "accuracy": 0.9605,
-        "precision_macro": 0.9565,
-        "recall_macro": 0.9508,
-        "f1_macro": 0.9527,
-        "cv_f1_macro_mean": 0.9374,
-        "cv_f1_macro_std": 0.0165,
-        "recall_normal": 1.0,
-        "recall_penipuan": 0.8939,
-        "recall_promosi": 0.9583,
-        "f1_normal": 0.9828,
-        "f1_penipuan": 0.9365,
-        "f1_promosi": 0.9388
-    },
-    {
-        "model_name": "Logistic Regression",
-        "accuracy": 0.9737,
-        "precision_macro": 0.9698,
-        "recall_macro": 0.964,
-        "f1_macro": 0.9668,
-        "cv_f1_macro_mean": 0.941,
-        "cv_f1_macro_std": 0.0155,
-        "recall_normal": 1.0,
-        "recall_penipuan": 0.9545,
-        "recall_promosi": 0.9375,
-        "f1_normal": 0.9913,
-        "f1_penipuan": 0.9618,
-        "f1_promosi": 0.9474
-    },
-    {
-        "model_name": "Linear SVM",
-        "accuracy": 0.9737,
-        "precision_macro": 0.9698,
-        "recall_macro": 0.964,
-        "f1_macro": 0.9668,
-        "cv_f1_macro_mean": 0.936,
-        "cv_f1_macro_std": 0.0116,
-        "recall_normal": 1.0,
-        "recall_penipuan": 0.9545,
-        "recall_promosi": 0.9375,
-        "f1_normal": 0.9913,
-        "f1_penipuan": 0.9618,
-        "f1_promosi": 0.9474
-    }
+  {
+    "model_name": "Multinomial Naive Bayes",
+    "cv_f1_macro_mean": 0.933,
+    "cv_f1_macro_std": 0.0105,
+    "cv_recall_penipuan_mean": 0.9248,
+    "accuracy": 0.9605,
+    "precision_macro": 0.9565,
+    "recall_macro": 0.9508,
+    "f1_macro": 0.9527,
+    "recall_penipuan": 0.8939
+  },
+  {
+    "model_name": "Logistic Regression",
+    "cv_f1_macro_mean": 0.9309,
+    "cv_f1_macro_std": 0.0131,
+    "cv_recall_penipuan_mean": 0.9247,
+    "accuracy": 0.9649,
+    "precision_macro": 0.9565,
+    "recall_macro": 0.9539,
+    "f1_macro": 0.955,
+    "recall_penipuan": 0.9242
+  },
+  {
+    "model_name": "Linear SVM",
+    "cv_f1_macro_mean": 0.9371,
+    "cv_f1_macro_std": 0.011,
+    "cv_recall_penipuan_mean": 0.9323,
+    "accuracy": 0.9737,
+    "precision_macro": 0.9698,
+    "recall_macro": 0.964,
+    "f1_macro": 0.9668,
+    "recall_penipuan": 0.9545
+  }
 ]
