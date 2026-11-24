@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SmishingGuard – Deteksi SMS Phishing & Spam Berbasis Machine Learning</title>
+<title>SmishingGuard - Deteksi SMS Phishing & Spam Berbasis Machine Learning</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Kaushan+Script&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -11,8 +11,14 @@
 </head>
 <body>
 
-<!-- HERO HEADER -->
+<!-- HERO HEADER WITH LIQUID EFFECT -->
 <header class="hero">
+  <!-- LIQUID MORPHING BLOBS -->
+  <div class="liquid-blob-1"></div>
+  <div class="liquid-blob-2"></div>
+  <div class="liquid-blob-3"></div>
+
+  <!-- NAVBAR -->
   <nav class="nav">
     <a href="#" class="logo">SMISHING<br><span>GUARD</span></a>
     <ul class="menu" id="menu">
@@ -23,67 +29,108 @@
       <li><a href="#why">Keunggulan</a></li>
       <li><a href="#scanner" class="btn sm">Tes SMS</a></li>
     </ul>
-    <button class="burger" id="burger" aria-label="Buka menu" aria-expanded="false"><span></span><span></span><span></span></button>
+    <button class="burger" id="burger" aria-label="Buka menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
   </nav>
+
+  <!-- HERO BODY CONTENT -->
   <div class="hero-body">
     <div class="social-proof">
-      <span class="avatars"><i>97%</i><i>1K</i><i>ML</i></span>
-      <b>1.138</b> SMS tervalidasi · Akurasi Pengujian <b>97.37%</b>
+      <b>11.745</b> SMS Tervalidasi (ID &amp; EN) | Akurasi Uji s.d. <b>97.37%</b>
     </div>
-    <span class="script">AI Cyber Defense</span>
+    <span class="script">Cyber Defense System</span>
     <h1>SMISHINGGUARD</h1>
-    <p>Sistem cerdas deteksi dini SMS penipuan rekayasa sosial, tautan phishing berkedok APK, pinjol ilegal, dan spam promosi berbasis Natural Language Processing &amp; Machine Learning.</p>
+    <p>Sistem deteksi dini SMS penipuan rekayasa sosial, tautan phishing berkedok APK, pinjol ilegal, serta spam promosi dwibahasa (Bahasa Indonesia &amp; English) berbasis Natural Language Processing dan Machine Learning.</p>
     <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
-      <a href="#scanner" class="btn">Mulai Pindai SMS Sekarang</a>
-      <a href="#models" class="btn outline">Lihat Evaluasi Model</a>
+      <a href="#scanner" class="btn">Buka Pemindai SMS</a>
+      <a href="#models" class="btn outline">Lihat Benchmark Model</a>
     </div>
-    <div class="badge">Champion<br>★★★★★<br>Logistic Reg</div>
+    <div class="badge">
+      MODEL TERBAIK<br>SKOR 5/5<br>LOGISTIC REG
+    </div>
+  </div>
+
+  <!-- LIQUID WAVE BOTTOM DIVIDER -->
+  <div class="liquid-wave-wrap">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+      <path class="wave-trans" d="M0,0 C150,90 350,-40 500,45 C650,130 900,10 1200,50 L1200,120 L0,120 Z"></path>
+      <path class="wave-bg" d="M0,20 C200,100 450,0 700,60 C950,120 1100,20 1200,40 L1200,120 L0,120 Z"></path>
+    </svg>
   </div>
 </header>
 
-<!-- PROMO TICKER RIBBON -->
-<div class="promo">🛡️ MODEL TERBAIK: LOGISTIC REGRESSION TERKALIBRASI (AKURASI 97.37% · RECALL PENIPUAN 95.45% · RECALL NORMAL 100% · 5-FOLD CV 0.9410) 🛡️</div>
+<!-- SOLID PROMO RIBBON -->
+<div class="promo">
+  MODEL UTAMA DWIBAHASA: LOGISTIC REGRESSION ID (AKURASI 97.37% | RECALL 95.45%) &amp; LOGISTIC REGRESSION EN (AKURASI 91.00% | KORPUS 10.607 SMS)
+</div>
 
 <!-- SCANNER SECTION -->
 <section class="section" id="scanner">
-  <h2 class="title">LIVE SMS SCANNER <span class="script orange">Real-Time Threat Detection</span></h2>
+  <h2 class="title">LIVE SMS SCANNER <span class="script accent">Deteksi Ancaman Real-Time</span></h2>
   
   <div class="scanner-container">
-    <div class="scanner-tag">HYBRID AI ENGINE</div>
+    <div class="scanner-tag">HYBRID AI ENGINE (ID &amp; EN)</div>
     
-    <!-- PRESET BUTTONS -->
+    <!-- PRESET BUTTONS WITH LANGUAGE TABS -->
     <div class="presets-bar">
-      <div class="presets-label">⚡ Pilih Contoh SMS Nyata untuk Uji Instan:</div>
-      <div class="preset-buttons">
-        <button class="preset-btn" data-type="shopee">🚨 Undian Shopee 175 Juta</button>
-        <button class="preset-btn" data-type="apk">📦 Modus Kurir Paket APK</button>
-        <button class="preset-btn" data-type="pinjol">💸 Pinjaman Online Bunga 0%</button>
-        <button class="preset-btn" data-type="promo">🎁 Promo Kuota Telkomsel</button>
-        <button class="preset-btn" data-type="normal">💬 Percakapan Normal Santai</button>
+      <div class="presets-header">
+        <span class="presets-label">Pilih Sampel Kasus untuk Uji Cepat:</span>
+        <div class="preset-lang-tabs" id="presetLangTabs">
+          <button class="preset-tab active" data-tab="id">Contoh Indonesia (ID)</button>
+          <button class="preset-tab" data-tab="en">English Samples (UK/US)</button>
+        </div>
+      </div>
+      <!-- Indonesian Presets -->
+      <div class="preset-buttons" id="presetsId">
+        <button class="preset-btn" data-type="shopee">[ID-1] Undian Shopee 175 Juta</button>
+        <button class="preset-btn" data-type="apk">[ID-2] Modus Kurir Paket APK</button>
+        <button class="preset-btn" data-type="pinjol">[ID-3] Pinjol Bunga 0 Persen</button>
+        <button class="preset-btn" data-type="promo">[ID-4] Promo Kuota Operator</button>
+        <button class="preset-btn" data-type="normal">[ID-5] Percakapan Personal Normal</button>
+      </div>
+      <!-- English Presets -->
+      <div class="preset-buttons" id="presetsEn" style="display: none;">
+        <button class="preset-btn" data-type="en_lottery">[EN-1] £1,000 Cash Prize Claim</button>
+        <button class="preset-btn" data-type="en_bank">[EN-2] Bank / PayPal Security Alert</button>
+        <button class="preset-btn" data-type="en_delivery">[EN-3] Royal Mail Parcel Fee</button>
+        <button class="preset-btn" data-type="en_promo">[EN-4] 500 Mins &amp; Free Phone</button>
+        <button class="preset-btn" data-type="en_normal">[EN-5] Casual Chat with Mate</button>
       </div>
     </div>
 
-    <!-- LANGUAGE DETECTION & INPUT BOX -->
-    <div class="lang-switch">
-      <span>Bahasa Terdeteksi:</span>
-      <span class="lang-badge" id="detectedLang">AUTO (INDONESIA)</span>
+    <!-- LANGUAGE CONTROL PANEL -->
+    <div class="lang-control-panel">
+      <div class="lang-mode-selector">
+        <span class="mode-label">Mode Deteksi Bahasa:</span>
+        <div class="lang-mode-btns" id="langModeBtns">
+          <button class="lang-mode-btn active" data-mode="auto">Otomatis (Auto-Detect)</button>
+          <button class="lang-mode-btn" data-mode="id">Indonesia (ID)</button>
+          <button class="lang-mode-btn" data-mode="en">English (EN)</button>
+        </div>
+      </div>
+      <div class="lang-status">
+        <span>Bahasa Aktif:</span>
+        <span class="lang-badge" id="detectedLang">AUTO (INDONESIA)</span>
+        <span class="lang-conf" id="langConfidence">Keyakinan: 100%</span>
+      </div>
     </div>
 
     <div class="input-box">
-      <textarea id="smsInput" class="sms-textarea" placeholder="Tempelkan atau ketik isi SMS mencurigakan di sini... (Contoh: Selamat! Anda mendapat hadiah Rp 50jt klik https://bit.ly/hadiah-shopee)"></textarea>
+      <textarea id="smsInput" class="sms-textarea" placeholder="Tempelkan atau ketik isi teks SMS di sini (Bahasa Indonesia atau English) untuk memindai indikator keamanan siber..."></textarea>
       <span class="char-counter" id="charCount">0 karakter</span>
     </div>
 
     <!-- ACTION ROW -->
     <div class="action-row">
-      <div style="display:flex; gap:.8rem; flex-wrap:wrap;">
-        <button class="btn" id="scanBtn">🔍 Pindai Keamanan SMS</button>
-        <button class="btn sm outline" id="clearBtn" style="color:var(--deep); border-color:var(--deep);">Kosongkan Teks</button>
+      <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+        <button class="btn" id="scanBtn">Pindai Keamanan SMS</button>
+        <button class="btn sm outline-dark" id="clearBtn">Kosongkan Teks</button>
       </div>
-      <span class="action-info">⚡ Pemindaian ganda: TF-IDF Machine Learning + Heuristic Cyber Rules</span>
+      <span class="action-info">Metode: Multi-Corpus TF-IDF + Logistic Regression (ID &amp; EN) + Analisis Heuristik</span>
     </div>
 
-    <!-- RESULT DISPLAY CARD -->
+    <!-- RESULT DISPLAY CARD (SOLID) -->
     <div class="result-display" id="resultDisplay">
       <div class="result-header">
         <div>
@@ -96,15 +143,15 @@
       <!-- CONFIDENCE METERS -->
       <div class="meters-section">
         <div class="meter-label">
-          <span>Tingkat Risiko Penipuan (Smishing)</span>
+          <span>Peluang Penipuan (Smishing)</span>
           <span id="scamPct">0%</span>
         </div>
         <div class="meter-track">
-          <div class="meter-fill orange" id="scamBar" style="width: 0%;"></div>
+          <div class="meter-fill red" id="scamBar" style="width: 0%;"></div>
         </div>
 
         <div class="meter-label">
-          <span>Tingkat Kepastian Pesan Normal</span>
+          <span>Peluang Pesan Normal (Aman)</span>
           <span id="safePct">0%</span>
         </div>
         <div class="meter-track">
@@ -112,18 +159,18 @@
         </div>
 
         <div class="meter-label">
-          <span>Tingkat Kepastian Promosi / Spam</span>
+          <span>Peluang Promosi Komersial</span>
           <span id="promoPct">0%</span>
         </div>
         <div class="meter-track">
-          <div class="meter-fill yellow" id="promoBar" style="width: 0%;"></div>
+          <div class="meter-fill amber" id="promoBar" style="width: 0%;"></div>
         </div>
       </div>
 
       <!-- HEURISTIC INDICATORS GRID -->
       <div class="heuristics-grid">
         <div class="h-card" id="cardUrl">
-          <b>Tautan URL / Shortlink</b>
+          <b>Tautan URL / Web</b>
           <span id="valUrl">Tidak Terdeteksi</span>
         </div>
         <div class="h-card" id="cardPhone">
@@ -151,57 +198,100 @@
 
 <!-- REAL WORLD CASES / STORIES -->
 <section class="section" id="stories">
-  <h2 class="title">STUDI KASUS NYATA <span class="script orange">Modus Kejahatan Smishing</span></h2>
+  <h2 class="title">STUDI KASUS NYATA <span class="script accent">Uji Coba Smishing</span></h2>
   <div class="tabs" id="tabs">
     <button class="tab active" data-f="all">Semua Kasus</button>
+    <button class="tab" data-f="english">Kasus Global (EN)</button>
     <button class="tab" data-f="apk">Modus APK Kurir</button>
     <button class="tab" data-f="undian">Undian Palsu</button>
     <button class="tab" data-f="pinjol">Pinjol Ilegal</button>
     <button class="tab" data-f="bank">Perbankan Phishing</button>
   </div>
   <div class="carousel">
-    <button class="arrow" id="prev" aria-label="Sebelumnya">‹</button>
+    <button class="arrow" id="prev" aria-label="Sebelumnya">&lt;</button>
     <div class="track" id="track">
       
-      <!-- Card 1: Kurir APK -->
-      <article class="card" data-c="apk">
-        <span class="chip danger">Modus APK Berbahaya</span>
+      <!-- Card EN 1: UK Lottery Claim -->
+      <article class="card" data-c="english">
+        <span class="chip danger">Smishing Global</span>
         <div class="who">
-          <i class="ph">📦</i>
+          <div class="ph" style="background:#1e3a8a; color:#fff;">UK</div>
           <div>
-            <h3>J&amp;T EXPRSS</h3>
-            <small>Resiko Kritis · File APK Pencuri OTP</small>
+            <h3>UK LOTTERY WIN</h3>
+            <small>Risiko Kritis | Modus Nomor Premium UK</small>
           </div>
         </div>
-        <p>“Paket Anda tertahan di gudang DC Cakung karena alamat kurang lengkap. Unduh foto resi paket: http://bit.ly/resi-paket-jnt.apk”</p>
-        <button class="btn sm use-case-btn" data-text="Paket Anda tertahan di gudang DC Cakung karena alamat kurang lengkap. Unduh foto resi paket: http://bit.ly/resi-paket-jnt.apk">Uji Kasus Ini</button>
+        <p>URGENT! You have won a £1,000 cash prize or a 2-week luxury holiday! Call 09061743835 from landline to claim your reward. Claim code: KL88. T&amp;Cs apply.</p>
+        <button class="btn sm use-case-btn" data-text="URGENT! You have won a £1,000 cash prize or a 2-week luxury holiday! Call 09061743835 from landline to claim your reward. Claim code: KL88. T&Cs apply.">Uji Kasus Ini</button>
+      </article>
+
+      <!-- Card EN 2: PayPal Security Phishing -->
+      <article class="card" data-c="english">
+        <span class="chip danger">Phishing Akun</span>
+        <div class="who">
+          <div class="ph" style="background:#0369a1; color:#fff;">PAY</div>
+          <div>
+            <h3>PAYPAL ALERT</h3>
+            <small>Risiko Kritis | Pencurian Password &amp; Rekening</small>
+          </div>
+        </div>
+        <p>SECURITY ALERT: Unusual sign-in attempt detected on your PayPal account from London, UK. If this wasn't you, verify identity at: https://bit.ly/secure-paypal-check</p>
+        <button class="btn sm use-case-btn" data-text="SECURITY ALERT: Unusual sign-in attempt detected on your PayPal account from London, UK. If this wasn't you, verify identity at: https://bit.ly/secure-paypal-check">Uji Kasus Ini</button>
+      </article>
+
+      <!-- Card EN 3: Royal Mail Parcel Scam -->
+      <article class="card" data-c="english">
+        <span class="chip danger">Delivery Smishing</span>
+        <div class="who">
+          <div class="ph" style="background:#991b1b; color:#fff;">ROY</div>
+          <div>
+            <h3>ROYAL MAIL UK</h3>
+            <small>Risiko Tinggi | Pancingan Biaya Pengiriman</small>
+          </div>
+        </div>
+        <p>Royal Mail: Your parcel has a £1.45 unpaid shipping fee and cannot be delivered. Update delivery preferences and pay online at: https://bit.ly/royalmail-redelivery-fee</p>
+        <button class="btn sm use-case-btn" data-text="Royal Mail: Your parcel has a £1.45 unpaid shipping fee and cannot be delivered. Update delivery preferences and pay online at: https://bit.ly/royalmail-redelivery-fee">Uji Kasus Ini</button>
+      </article>
+
+      <!-- Card 1: Kurir APK -->
+      <article class="card" data-c="apk">
+        <span class="chip danger">APK Berbahaya</span>
+        <div class="who">
+          <div class="ph">APK</div>
+          <div>
+            <h3>J&amp;T EXPRSS</h3>
+            <small>Risiko Kritis | SMS Sniffer OTP</small>
+          </div>
+        </div>
+        <p>Paket Anda tertahan di gudang drop point karena alamat kurang lengkap. Unduh foto resi paket: http://bit.ly/resi-paket-jnt.apk</p>
+        <button class="btn sm use-case-btn" data-text="Paket Anda tertahan di gudang drop point karena alamat kurang lengkap. Unduh foto resi paket: http://bit.ly/resi-paket-jnt.apk">Uji Kasus Ini</button>
       </article>
 
       <!-- Card 2: Undian Shopee -->
       <article class="card" data-c="undian">
         <span class="chip danger">Undian Fiktif</span>
         <div class="who">
-          <i class="ph">🎉</i>
+          <div class="ph">SHO</div>
           <div>
             <h3>SHOPEE 77</h3>
-            <small>Resiko Tinggi · Pancingan Hadiah Uang</small>
+            <small>Risiko Tinggi | Pancingan Hadiah Uang</small>
           </div>
         </div>
-        <p>“Surat Keputusan Resmi Shopee: No. Anda terpilih pemenang Grand Prize Rp 175.000.000. Kode PIN: 254F77. Klaim segera di wa.me/6281298765432”</p>
-        <button class="btn sm use-case-btn" data-text="Surat Keputusan Resmi Shopee: No. Anda terpilih pemenang Grand Prize Rp 175.000.000. Kode PIN: 254F77. Klaim segera di wa.me/6281298765432">Uji Kasus Ini</button>
+        <p>Surat Keputusan Resmi Shopee: No. Anda terpilih pemenang Hadiah Cek Rp 175.000.000. Kode PIN: 254F77. Klaim segera di wa.me/6281298765432</p>
+        <button class="btn sm use-case-btn" data-text="Surat Keputusan Resmi Shopee: No. Anda terpilih pemenang Hadiah Cek Rp 175.000.000. Kode PIN: 254F77. Klaim segera di wa.me/6281298765432">Uji Kasus Ini</button>
       </article>
 
       <!-- Card 3: Pinjol Ilegal -->
       <article class="card" data-c="pinjol">
         <span class="chip danger">Pinjaman Ilegal</span>
         <div class="who">
-          <i class="ph">💸</i>
+          <div class="ph">KTA</div>
           <div>
             <h3>DANA KILAT</h3>
-            <small>Resiko Sedang · Penipuan Bunga 0%</small>
+            <small>Risiko Sedang | Modus Bunga 0 Persen</small>
           </div>
         </div>
-        <p>“Dana Tunai Cepat Cair s.d Rp 50.000.000 tanpa BI checking &amp; bunga 0%. Syarat KTP langsung ACC dalam 5 menit. Hubungi WA 085712345678”</p>
+        <p>Dana Tunai Cepat Cair s.d Rp 50.000.000 tanpa BI checking &amp; bunga 0%. Syarat KTP langsung ACC dalam 5 menit. Hubungi WA 085712345678</p>
         <button class="btn sm use-case-btn" data-text="Dana Tunai Cepat Cair s.d Rp 50.000.000 tanpa BI checking & bunga 0%. Syarat KTP langsung ACC dalam 5 menit. Hubungi WA 085712345678">Uji Kasus Ini</button>
       </article>
 
@@ -209,13 +299,13 @@
       <article class="card" data-c="bank">
         <span class="chip danger">Phishing Perbankan</span>
         <div class="who">
-          <i class="ph">🏦</i>
+          <div class="ph">BNK</div>
           <div>
             <h3>BANK ALERT</h3>
-            <small>Resiko Kritis · Pembobolan Rekening</small>
+            <small>Risiko Kritis | Pencurian Rekening</small>
           </div>
         </div>
-        <p>“PERINGATAN: Rekening BCA Anda terindikasi login mencurigakan dan akan diblokir dalam 1x24 jam. Segera verifikasi akun di: https://bca-klik-verif.com”</p>
+        <p>PERINGATAN: Rekening BCA Anda terindikasi login mencurigakan dan akan diblokir dalam 1x24 jam. Segera verifikasi akun di: https://bca-klik-verif.com</p>
         <button class="btn sm use-case-btn" data-text="PERINGATAN: Rekening BCA Anda terindikasi login mencurigakan dan akan diblokir dalam 1x24 jam. Segera verifikasi akun di: https://bca-klik-verif.com">Uji Kasus Ini</button>
       </article>
 
@@ -223,22 +313,22 @@
       <article class="card" data-c="all">
         <span class="chip">SMS Normal</span>
         <div class="who">
-          <i class="ph">💬</i>
+          <div class="ph">MSG</div>
           <div>
             <h3>TEMAN KULIAH</h3>
-            <small>Aman · Percakapan Sehari-hari</small>
+            <small>Aman | Percakapan Personal</small>
           </div>
         </div>
-        <p>“Bro, jangan lupa besok pagi kumpul di perpus jam 9 ya buat ngerjain laporan machine learning bareng kelompok.”</p>
-        <button class="btn sm use-case-btn" data-text="Bro, jangan lupa besok pagi kumpul di perpus jam 9 ya buat ngerjain laporan machine learning bareng kelompok.">Uji Kasus Ini</button>
+        <p>Bro, jangan lupa besok pagi kumpul di perpustakaan jam 9 ya buat ngerjain laporan machine learning bareng kelompok.</p>
+        <button class="btn sm use-case-btn" data-text="Bro, jangan lupa besok pagi kumpul di perpustakaan jam 9 ya buat ngerjain laporan machine learning bareng kelompok.">Uji Kasus Ini</button>
       </article>
 
     </div>
-    <button class="arrow" id="next" aria-label="Berikutnya">›</button>
+    <button class="arrow" id="next" aria-label="Berikutnya">&gt;</button>
   </div>
 </section>
 
-<!-- MARQUEE TICKER -->
+<!-- MARQUEE TICKER (SOLID) -->
 <div class="press" aria-label="Teknologi yang digunakan">
   <div class="marquee">
     <span>MACHINE LEARNING</span>
@@ -258,27 +348,27 @@
 
 <!-- HOW IT WORKS SECTION -->
 <section class="section" id="how">
-  <h2 class="title right">HOW IT WORKS? <span class="script orange">Tiga Tahap Deteksi</span></h2>
+  <h2 class="title right">CARA KERJA SISTEM <span class="script accent">Tiga Tahap Deteksi</span></h2>
   <div class="steps">
     <div class="step big">
       <div>
         <h3 class="script light">1. Preprocessing &amp; Masking</h3>
-        <p>Pesan dibersihkan dari noise, singkatan gaul dinormalisasi menggunakan kamus 100+ lema kata alay, dan entitas disamarkan menjadi token generik <code>[url]</code>, <code>[nomor]</code>, <code>[nominal]</code>, serta <code>[kode]</code> untuk mencegah overfitting.</p>
+        <p>Pesan dibersihkan dari noise, singkatan gaul dinormalisasi menggunakan kamus 100+ kata alay, dan entitas disamarkan menjadi token generik [url], [nomor], [nominal], serta [kode] untuk mencegah model menghafal domain acak.</p>
       </div>
       <a href="#scanner" class="btn sm">Coba Pemindai Sekarang</a>
     </div>
     <div class="step">
       <h3 class="script light">2. Ekstraksi Fitur TF-IDF</h3>
-      <p>Mengonversi teks ke dalam 3.006 fitur n-gram leksikal dengan pembobotan sublinear term frequency untuk menangkap frasa tipikal penipuan.</p>
+      <p>Mengonversi teks ke dalam 3.006 fitur n-gram leksikal dengan pembobotan sublinear term frequency untuk mendeteksi korelasi pola kata.</p>
     </div>
     <div class="step">
       <h3 class="script light">3. Klasifikasi &amp; Heuristik</h3>
-      <p>Model Logistic Regression menghitung probabilitas terkalibrasi sementara mesin heuristik memindai tautan, nomor, dan manipulasi psikologis.</p>
+      <p>Model Logistic Regression menghitung probabilitas kelas terkalibrasi sementara mesin heuristik memindai tautan, nomor, dan manipulasi finansial.</p>
     </div>
     <div class="photo">
       <div class="photo-inner">
         <h4>97.37%</h4>
-        <p>Tingkat Akurasi Evaluasi Pengujian Independen (N=228 Data Uji Murni)</p>
+        <p>Tingkat Akurasi Pengujian Independen (N=228 Data Uji Murni)</p>
         <span class="tag">Zero False Alarms</span>
       </div>
     </div>
@@ -304,7 +394,7 @@
         <li class="off">Probabilitas Terkalibrasi</li>
       </ul>
       <a href="#scanner" class="btn sm">Uji Model</a>
-      <b>TRAINING SPEED: ULTRA CEPAT</b>
+      <b>TRAINING SPEED: SANGAT CEPAT</b>
     </article>
 
     <!-- Model 2: Logistic Regression (Featured) -->
@@ -313,32 +403,50 @@
       <h3>LOGISTIC REGRESSION</h3>
       <p class="sub">C=2.5, class_weight='balanced'</p>
       <ul>
-        <li>Akurasi Uji: <b>97.37%</b></li>
-        <li>Macro F1-Score: <b>96.68%</b></li>
+        <li>Akurasi Uji: <b>97.37%</b> (Tertinggi)</li>
+        <li>Macro F1-Score: <b>96.68%</b> (Tertinggi)</li>
         <li>Recall Penipuan: <b>95.45%</b> (Sangat Tinggi)</li>
         <li>Recall Normal: <b>100.0%</b> (Sempurna)</li>
-        <li>5-Fold CV: <b>0.9410</b> (Tertinggi)</li>
+        <li>5-Fold CV: <b>0.9410</b> (Terbaik)</li>
         <li>Probabilitas Asli Terkalibrasi (Softmax)</li>
         <li>Interpretabilitas Koefisien Jelas</li>
       </ul>
-      <a href="#scanner" class="btn sm orange">Model Terpilih</a>
+      <a href="#scanner" class="btn sm solid-dark">Model Terpilih</a>
       <b>STATUS: OPTIMAL / GOOD FIT (+2.08%)</b>
     </article>
 
     <!-- Model 3: Linear SVM -->
     <article class="plan">
       <h3>LINEAR SVM</h3>
-      <p class="sub">LinearSVC + CalibratedCV</p>
+      <p class="sub">LinearSVC + CalibratedCV (ID)</p>
       <ul>
         <li>Akurasi Uji: <b>97.37%</b></li>
         <li>Macro F1-Score: <b>96.68%</b></li>
         <li>Recall Penipuan: <b>95.45%</b></li>
         <li>Recall Normal: <b>100.0%</b></li>
         <li>5-Fold CV: <b>0.9360</b></li>
-        <li>Kalibrasi sigmoid sigmoid</li>
+        <li>Kalibrasi Sigmoid Post-Hoc</li>
       </ul>
       <a href="#scanner" class="btn sm">Uji Model</a>
       <b>MARGIN HYPERPLANE OPTIMAL</b>
+    </article>
+
+    <!-- Model 4: Logistic Regression English -->
+    <article class="plan en-featured">
+      <span class="plan-badge en-badge">GLOBAL CORPUS (EN)</span>
+      <h3>LOGISTIC REGRESSION (EN)</h3>
+      <p class="sub">Korpus SMS Inggris (N=10.607 Baris)</p>
+      <ul>
+        <li>Akurasi Uji: <b>91.00%</b></li>
+        <li>Macro F1-Score: <b>89.81%</b></li>
+        <li>Recall Phishing: <b>90.40%</b></li>
+        <li>Dataset: <b>10.607 SMS Standar</b></li>
+        <li>5-Fold CV: <b>0.8924</b></li>
+        <li>TF-IDF N-Gram (1,2) Sublinear</li>
+        <li>Artefak: <b>best_model_en.joblib</b></li>
+      </ul>
+      <a href="#scanner" class="btn sm solid-en">Uji Model Inggris</a>
+      <b>STATUS: MULTILINGUAL READY</b>
     </article>
 
   </div>
@@ -346,7 +454,7 @@
 
 <!-- WHAT MAKES US DIFFERENT -->
 <section class="section" id="why">
-  <h2 class="title">MENGAPA SISTEM INI <span class="script orange">Berbeda?</span></h2>
+  <h2 class="title">KEUNGGULAN SISTEM <span class="script accent">Hybrid Security</span></h2>
   <div class="diff">
     <ul>
       <li><b>RECALL TINGGI PADA PENIPUAN (95.45%)</b>Menjamin hampir seluruh ancaman penipuan tertangkap tanpa meloloskan SMS berbahaya.</li>
@@ -361,7 +469,7 @@
     </div>
     <ul>
       <li><b>ENTITY MASKING PINTAR</b>Mencegah model menghafal URL spesifik sehingga tahan terhadap domain baru.</li>
-      <li><b>DUKUNGAN DWIBAHASA (ID &amp; EN)</b>Dilengkapi modul deteksi otomatis bahasa Indonesia dan Inggris.</li>
+      <li><b>DUKUNGAN DWIBAHASA (ID &amp; EN)</b>Didukung korpus 10.607 SMS Inggris (Akurasi 91.00%) dan 1.138 SMS Indonesia (Akurasi 97.37%) dengan deteksi otomatis.</li>
       <li><b>TRANSPARANSI KEPUTUSAN</b>Dilengkapi penjelasan kata pemicu keputusan dan skor risiko terukur.</li>
     </ul>
   </div>
@@ -371,7 +479,7 @@
 <footer class="footer">
   <b class="logo">SMISHING<span>GUARD</span></b>
   <p>Sistem Deteksi SMS Phishing Berbasis Natural Language Processing &amp; Machine Learning.</p>
-  <p style="margin-top:.4rem; opacity:.8;">© 2026 SmishingGuard. Proyek Akhir Pembelajaran Mesin Semester 5 — Sekolah Vokasi.</p>
+  <p style="margin-top:0.4rem; opacity:0.75;">(C) 2026 SmishingGuard. Proyek Akhir Pembelajaran Mesin Semester 5 - Sekolah Vokasi.</p>
 </footer>
 
 <script src="script.js"></script>

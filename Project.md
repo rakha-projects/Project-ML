@@ -267,6 +267,18 @@ Sesuai ketentuan perkuliahan, kelompok beranggotakan 3 orang mahasiswa dengan pe
     4. Sistem notifikasi otomatis (*Reactive Wakeup*) saat komputasi selesai.
   - Melakukan pembersihan (*cleanup*) terhadap seluruh handle proses latar belakang yang telah selesai.
 
+### [2026-11-24 - Sesi 9] - Integrasi Fitur Deteksi SMS Bahasa Inggris (Multilingual Support) pada Web
+- **Pengembangan Komponen Antarmuka Dwibahasa (`Project-ML/files/index.html` & `style.css`)**:
+  - Menambahkan panel kontrol pemilihan mode bahasa: *Auto-Detect (Otomatis)*, *Bahasa Indonesia (ID)*, dan *English (EN)*.
+  - Menambahkan tab preset dwibahasa: Sampel Kasus Indonesia (5 kasus) dan English Samples UK/US (5 kasus internasional: UK Lottery Claim, Bank/PayPal Alert, Royal Mail Parcel Fee, 500 Mins Promo, Casual Meetup).
+  - Menambahkan kartu benchmark model ke-4: **Logistic Regression (English Model)** berbasis korpus 10.607 SMS standar (Akurasi 91.00%, Macro F1 89.81%, Recall 90.40%).
+  - Menambahkan studi kasus penipuan internasional ke dalam carousel (UK Lottery, PayPal Security, Royal Mail).
+- **Peningkatan Mesin Deteksi Hybrid (`Project-ML/files/script.js`)**:
+  - Mengintegrasikan kamus leksikal bahasa Inggris, penanda mata uang (£, $, €, GBP, USD), nomor telepon internasional/Inggris (0906, 0800, +44, shortcode operator), serta pola teks phishing global.
+  - Memberikan panduan keamanan siber spesifik (peringatan tarif premium 0906, phishing link stealing credentials) saat pesan berbahasa Inggris dianalisis.
+- **Sinkronisasi Berkas**:
+  - Menyinkronkan seluruh berkas `index.html`, `style.css`, dan `script.js` antara folder `Project-ML/files/` dan `Project-ML/template/`.
+
 ### [2026-10-30 - Sesi 8] - Eksekusi Milestone 5: Evaluasi Komprehensif, Overfitting Check & Error Analysis
 - **Pemeriksaan Overfitting vs Underfitting (`Project/src/evaluate.py`)**:
   - Menguji performa data latih vs data uji:
