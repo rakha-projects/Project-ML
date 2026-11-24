@@ -220,6 +220,7 @@ Project-ML/
 │   ├── style.css
 │   └── script.js
 ├── presentasi.html                             # [SLIDE DECK PPT] File Presentasi 16:9 Lengkap (Bab A - O)
+├── training_sms_phishing.ipynb                 # [JUPYTER NOTEBOOK] Pipeline Pelatihan Model End-to-End
 ├── laporan/                                    # Folder Berkas Laporan & Presentasi
 │   └── presentasi.html                         # Salinan berkas presentasi siap konversi ke PPT
 ├── example.html                                # Rujukan acuan sistem desain UI/UX awal

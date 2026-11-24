@@ -108,6 +108,7 @@ Project-ML/
 ├── app.py                                      # Aplikasi Web Streamlit (Menjalankan files/ secara full-width)
 ├── example.html                                # Berkas referensi desain awal
 ├── presentasi.html                             # [SLIDE DECK PPT] File Presentasi 16:9 Lengkap (Bab A - O)
+├── training_sms_phishing.ipynb                 # [JUPYTER NOTEBOOK] Pipeline Pelatihan Model End-to-End
 └── laporan/                                    # Folder Berkas Laporan & Presentasi
     └── presentasi.html                         # Salinan berkas presentasi siap konversi ke PPT
 ```
@@ -146,6 +147,24 @@ Sesuai ketentuan perkuliahan, kelompok beranggotakan 3 orang mahasiswa dengan pe
 ## 6. Riwayat Perubahan (Changelog & Activity Tracking)
 
 > **Komitmen Pembaruan:** Dokumen ini akan diperbarui pada setiap iterasi/perintah prompt untuk merekam semua tindakan, perkembangan implementasi, dan keputusan teknis yang telah diambil.
+
+### [2026-11-12 - Sesi 18] - Pembuatan Berkas Jupyter Notebook Pelatihan Mandiri (training_sms_phishing.ipynb)
+- **Penyusunan Berkas `training_sms_phishing.ipynb`**:
+  - Membangun notebook Jupyter mandiri [**`Project-ML/training_sms_phishing.ipynb`**](file:///c:/Users/user/Documents/Semester%205/Machine%20Learning/Project-ML/training_sms_phishing.ipynb) yang terstruktur lengkap dalam 31 sel eksekusi (format nbformat v4).
+  - Meliputi seluruh siklus Machine Learning:
+    1. *Data Loading & Audit Integritas*: Pemuatan dataset Indonesia (1.138 baris) dan visualisasi distribusi kelas (pie chart & bar chart).
+    2. *Preprocessing & Entity Masking*: Normalisasi kamus slang 100+ kata alay (`dpt`, `rek`, `hub`, `tsel`) dan penyamaran entitas regex (`[url]`, `[nomor]`, `[nominal]`, `[kode]`).
+    3. *Exploratory Data Analysis (EDA)*: Analisis panjang karakter pesan dan boxplot statistik.
+    4. *Stratified 80:20 Split*: 910 data latih : 228 data uji murni bebas *data leakage*.
+    5. *Ekstraksi Fitur TF-IDF N-Gram (1, 2)*: Pembentukan 3.006 fitur leksikal dengan sublinear TF scaling.
+    6. *Pelatihan & Perbandingan 3 Algoritma*: Multinomial Naive Bayes, Logistic Regression (Champion), dan Linear SVM Calibrated.
+    7. *Validasi Silang*: 5-Fold Stratified Cross-Validation (Macro F1-Score).
+    8. *Evaluasi Data Uji*: Tabel metrik komparasi dan heatmap Confusion Matrix 3 model berdampingan.
+    9. *Pemeriksaan Overfitting*: Pembuktian kondisi Optimal / Good Fit (+2.08% gap).
+    10. *Error Analysis*: Bedah 6 data uji yang salah diprediksi (*error rate 2.63%*).
+    11. *Feature Importance*: Ekstraksi 10 kata kunci pemicu keputusan per kelas.
+    12. *Export Model & Live Inference*: Serialisasi `.joblib` dan fungsi pengujian teks interaktif.
+  - Kompatibel penuh untuk dibuka langsung di VS Code, Jupyter Lab, maupun Google Colaboratory.
 
 ### [2026-11-11 - Sesi 17] - Persiapan & Panduan Deployment ke Streamlit Community Cloud (rakhaprojects@gmail.com)
 - **Verifikasi Sinkronisasi Repositori GitHub**:
