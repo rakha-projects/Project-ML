@@ -1,8 +1,9 @@
-﻿"""SmishingGuard: a real model-backed Streamlit application."""
+"""SmishingGuard: a real model-backed Streamlit application."""
 from __future__ import annotations
 
 import hashlib
 import html
+import io
 import time
 
 import pandas as pd
@@ -10,6 +11,7 @@ import streamlit as st
 
 from src.app_data import ROOT, load_resources, parse_csv
 from src.inference import LABELS, MAX_SMS_CHARS, analyze_batch, analyze_sms, safe_csv_bytes
+from src.visuals import png_markup
 
 st.set_page_config(page_title='SmishingGuard | Periksa SMS', layout='wide',
                    initial_sidebar_state='collapsed')
@@ -280,8 +282,12 @@ def matrix_plot(model):
     ax.set_ylabel('Kategori aktual', labelpad=10)
     ax.spines[['top', 'right', 'bottom', 'left']].set_visible(False)
     fig.tight_layout()
-    st.pyplot(fig, width='stretch')
-    plt.close(fig)
+    try:
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png', dpi=160, bbox_inches='tight')
+        st.html(png_markup(buffer.getvalue(), f"Confusion matrix {model['model_name']}"))
+    finally:
+        plt.close(fig)
 
 
 def model_dashboard():
@@ -338,10 +344,14 @@ def model_dashboard():
     with st.expander('Eksplorasi data (EDA)'):
         plots = {'Distribusi kelas': '1_class_distribution.png', 'Panjang pesan': '2_length_distribution.png',
                  'Indikator heuristik': '3_heuristic_indicators.png', 'Kata kunci': '4_top_keywords.png',
-                 'Korelasi fitur': '5_correlation_heatmap.png'}
+                 'Korelasi fitur': '5_correlation_heatmap.png',
+                 'Kata berpengaruh pada model': 'feature_importance.png'}
         plot = st.selectbox('Pilih visualisasi', list(plots))
-        st.image(str(ROOT / 'eda_results' / plots[plot]), width='stretch')
-        st.caption('EDA menggunakan korpus standar sebelum seleksi kategori Inggris untuk training. Jumlah korpus EDA Inggris berbeda dari jumlah data model Inggris.')
+        st.html(png_markup((ROOT / 'eda_results' / plots[plot]).read_bytes(), plot))
+        if plot == 'Kata berpengaruh pada model':
+            st.caption('Bobot fitur model Indonesia terpilih. Pada SVM terkalibrasi, bobot dirata-ratakan dari estimator; ini bukan penjelasan kausal.')
+        else:
+            st.caption('EDA menggunakan korpus standar sebelum seleksi kategori Inggris untuk training. Jumlah korpus EDA Inggris berbeda dari jumlah data model Inggris.')
     with st.expander('Keterbatasan dan analisis kesalahan'):
         st.write('Data Indonesia relatif kecil dan lama. Bahasa campuran, ejaan tersamarkan, pesan sangat pendek, serta modus baru dapat menurunkan ketepatan. Belum ada validasi eksternal dengan SMS Indonesia terbaru.')
         error_path = ROOT / 'models/error_analysis.csv'
